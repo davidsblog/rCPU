@@ -43,38 +43,6 @@ void log_filter(log_type, char*, char*, int);
 void send_api_response(struct hitArgs *args, char*, char*);
 void send_file_response(struct hitArgs *args, char*, char*, int);
 
-struct termios original_settings;
-pthread_t server_thread_id;
-
-void* server_thread(void *args)
-{
-    pthread_detach(pthread_self());
-    char *arg = (char*)args;
-    dwebserver(atoi(arg), &send_response, &log_filter);
-    return NULL;
-}
-
-void close_down()
-{
-    tcsetattr(STDIN_FILENO, TCSANOW, &original_settings);
-    dwebserver_kill();
-    pthread_cancel(server_thread_id);
-    puts("Bye bye");
-}
-
-void wait_for_key()
-{
-    struct termios unbuffered;
-    tcgetattr(STDIN_FILENO, &original_settings);
-    
-    unbuffered = original_settings;
-    unbuffered.c_lflag &= ~(ECHO | ICANON);
-    tcsetattr(STDIN_FILENO, TCSANOW, &unbuffered);
-    
-    getchar();
-    close_down();
-}
-
 int main(int argc, char **argv)
 {
     if (argc < 2 || !strncmp(argv[1], "-h", 2))
@@ -82,22 +50,9 @@ int main(int argc, char **argv)
 		printf("hint: dweb [port number]\n");
 		return 0;
 	}
-    if (argc > 2 && !strncmp(argv[2], "-d", 2))
-    {
-        // don't read from the console or log anything
-        dwebserver(atoi(argv[1]), &send_response, NULL);
-    }
-    else
-    {
-        if (pthread_create(&server_thread_id, NULL, server_thread, argv[1]) !=0)
-        {
-            puts("Error: pthread_create could not create server thread");
-            return 0;
-        }
     
-        puts("dweb server started\nPress a key to quit");
-        wait_for_key();
-    }
+    // don't read from the console or log anything
+    dwebserver(atoi(argv[1]), &send_response, NULL);
 }
 
 void log_filter(log_type type, char *s1, char *s2, int socket_fd)
