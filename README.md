@@ -1,2 +1,2 @@
 # rCPU
-Remote CPU monitoring webserver
+A minimal webserver for remote CPU monitoring.
