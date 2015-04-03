@@ -1,17 +1,16 @@
 $(function() {
-  $("#status").text("OK. Javascript and jQuery are working...");
-  
-  setInterval("count_with_ajax()", 1000);
+  $("#status").text("");
+  setInterval("get_cpu_use()", 500);
 });
 
-function count_with_ajax()
+function get_cpu_use()
 {
 	$.ajax({
-		url: "counter.api",
+		url: "cpu.api",
 		type: "post",
 		data: { counter:$("#counter").text() }
 	}).done(function(data)
 	{
-		$("#counter").text(data);
+		$("#counter").text(data[1]);
 	});
 }
