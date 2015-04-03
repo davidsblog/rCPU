@@ -47,18 +47,17 @@ int main(int argc, char **argv)
 {
     if (argc < 2 || !strncmp(argv[1], "-h", 2))
 	{
-		printf("hint: dweb [port number]\n");
+		printf("hint: rcpu [port number]\n");
 		return 0;
 	}
     
     // don't read from the console or log anything
-    dwebserver(atoi(argv[1]), &send_response, NULL);
+    dwebserver(atoi(argv[1]), &send_response, &log_filter);
 }
 
 void log_filter(log_type type, char *s1, char *s2, int socket_fd)
 {
-    if (type!=ERROR) return;
-    printf("ERROR: %s: %s (errno=%d pid=%d socket=%d)\n",s1, s2, errno, getpid(), socket_fd);
+    // log to null :-)
 }
 
 // decide if we need to send an API response or a file...
@@ -154,7 +153,7 @@ void send_file_response(struct hitArgs *args, char *path, char *request_body, in
         return forbidden_403(args, "files this large are not supported");
     }
     
-    string_add(response, "HTTP/1.1 200 OK\nServer: dweb\n");
+    string_add(response, "HTTP/1.1 200 OK\n");
     string_add(response, "Connection: close\n");
     string_add(response, "Content-Type: ");
     string_add(response, content_type);
