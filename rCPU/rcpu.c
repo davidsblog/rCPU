@@ -216,7 +216,7 @@ void get_cpu_use(int cpu[], int len)
 {
   FILE *fp;
   unsigned long long int fields[10], total_tick[MAX_CPU], total_tick_old[MAX_CPU], idle[MAX_CPU], idle_old[MAX_CPU], del_total_tick[MAX_CPU], del_idle[MAX_CPU];
-  int update_cycle = 0, i, cpus = 0, count;
+  int i, cpus = 0, count;
   double percent_usage;
 
   fp = fopen ("/proc/stat", "r");
@@ -238,7 +238,7 @@ void get_cpu_use(int cpu[], int len)
     sleep (1);
     fseek (fp, 0, SEEK_SET);
     fflush (fp);
-    printf ("[Update cycle %d]\n", update_cycle); 
+
     for (count = 0; count < cpus; count++)
     {
       total_tick_old[count] = total_tick[count];
@@ -259,20 +259,17 @@ void get_cpu_use(int cpu[], int len)
       del_idle[count] = idle[count] - idle_old[count];
 
       percent_usage = ((del_total_tick[count] - del_idle[count]) / (double) del_total_tick[count]) * 100;
-      if (count == 0)
+      /*if (count == 0)
       {
           printf ("Total CPU Usage: %3.2lf%%\n", percent_usage);
       }
       else 
       {
           printf ("\tCPU%d Usage: %3.2lf%%\n", count - 1, percent_usage);
-      }
+      }*/
 
       cpu[count] = (int)percent_usage;
     }
-    //update_cycle++;
-    //printf ("\n");
-
-  /* Ctrl + C quit, therefore this will not be reached. We rely on the kernel to close this file */
+    
   fclose (fp);
 }
