@@ -76,23 +76,24 @@ void send_response(struct hitArgs *args, char *path, char *request_body, http_ve
     send_file_response(args, path, request_body, path_length);
 }
 
-#define MAX_CPU 16
+#define MAX_CPU 128
+int arr[MAX_CPU] = { 0 };
 
 // a simple API, it receives a number, increments it and returns the response
 void send_api_response(struct hitArgs *args, char *path, char *request_body)
 {
 	char tmp[4];
-    int arr[MAX_CPU] = { 0 };
-    
+        
 	if (args->form_value_counter==1 && !strncmp(form_name(args, 0), "counter", strlen(form_name(args, 0))))
 	{
-        get_cpu_use(arr, MAX_CPU);
+        get_cpu_use(&arr[0], MAX_CPU);
         
         STRING *response = new_string(32);
         string_add(response, "[");
         for (int p=0; p<MAX_CPU; p++)
         {
-            sprintf(tmp, "%d", arr[p]);
+            printf("%d, ", arr[p]);
+	    sprintf(tmp, "%d", arr[p]);
             string_add(response, tmp);
             if (p<MAX_CPU-1)
             {
@@ -100,6 +101,7 @@ void send_api_response(struct hitArgs *args, char *path, char *request_body)
             }
         }
         string_add(response, "]");
+printf("\n");
         
         int c = atoi(form_value(args, 0));
 		if (c>MAX_CPU) c=0;
@@ -181,86 +183,87 @@ void send_file_response(struct hitArgs *args, char *path, char *request_body, in
 
 int read_fields (FILE *fp, unsigned long long int *fields)
 {
-    int retval;
-    char buffer[BUF_MAX];
-    
-    if (!fgets (buffer, BUF_MAX, fp))
-    {
-        perror ("Error");
-    }
-    /* line starts with c and a string. This is to handle cpu, cpu[0-9]+ */
-    retval = sscanf (buffer, "c%*s %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu",
-                     &fields[0],
-                     &fields[1],
-                     &fields[2],
-                     &fields[3],
-                     &fields[4],
-                     &fields[5],
-                     &fields[6],
-                     &fields[7],
-                     &fields[8],
-                     &fields[9]);
-    
-    if (retval == 0)
-    {
-        return -1;
-    }
-    if (retval < 4) /* Atleast 4 fields is to be read */
-    {
-        fprintf (stderr, "Error reading /proc/stat cpu field\n");
-        return 0;
-    }
-    return 1;
+  int retval;
+  char buffer[BUF_MAX];
+
+  if (!fgets (buffer, BUF_MAX, fp))
+  { perror ("Error"); }
+  /* line starts with c and a string. This is to handle cpu, cpu[0-9]+ */
+  retval = sscanf (buffer, "c%*s %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu",
+                            &fields[0], 
+                            &fields[1], 
+                            &fields[2], 
+                            &fields[3], 
+                            &fields[4], 
+                            &fields[5], 
+                            &fields[6], 
+                            &fields[7], 
+                            &fields[8], 
+                            &fields[9]); 
+  if (retval == 0)
+  { return -1; }
+  if (retval < 4) /* Atleast 4 fields is to be read */
+  {
+    fprintf (stderr, "Error reading /proc/stat cpu field\n");
+    return 0;
+  }
+  return 1;
 }
 
-void get_cpu_use(int *cpu, int len)
+void get_cpu_use(int cpu[], int len)
 {
-    FILE *fp;
-    unsigned long long int fields[10], total_tick[MAX_CPU], total_tick_old[MAX_CPU];
-    unsigned long long int idle[MAX_CPU], idle_old[MAX_CPU], del_total_tick[MAX_CPU], del_idle[MAX_CPU];
-    int i, cpus=0, count;
-    double percent_usage;
-    
-    fp = fopen ("/proc/stat", "r");
-    if (fp == NULL)
-    {
-        return;
-    }
-    
-    while (read_fields (fp, fields) != -1)
-    {
-        for (i=0, total_tick[cpus] = 0; i<10; i++)
-        {
-            total_tick[cpus] += fields[i];
-        }
-        idle[cpus] = fields[3]; /* idle ticks index */
-        cpus++;
-    }
-    
+  FILE *fp;
+  unsigned long long int fields[10], total_tick[MAX_CPU], total_tick_old[MAX_CPU], idle[MAX_CPU], idle_old[MAX_CPU], del_total_tick[MAX_CPU], del_idle[MAX_CPU];
+  int update_cycle = 0, i, cpus = 0, count;
+  double percent_usage;
+
+  fp = fopen ("/proc/stat", "r");
+  if (fp == NULL)
+  {
+    return;
+  }
+
+  while (read_fields (fp, fields) != -1)
+  {
+    for (i=0, total_tick[cpus] = 0; i<10; i++)
+    { total_tick[cpus] += fields[i]; }
+    idle[cpus] = fields[3]; /* idle ticks index */
+    cpus++;
+  }
+
+  //while (1)
+  {
+    sleep (1);
     fseek (fp, 0, SEEK_SET);
     fflush (fp);
-    for (count = 0; count < cpus && count < len; count++)
+    printf ("[Update cycle %d]\n", update_cycle); 
+    for (count = 0; count < cpus; count++)
     {
-        total_tick_old[count] = total_tick[count];
-        idle_old[count] = idle[count];
-        
-        if (!read_fields (fp, fields))
-        {
-            return;
-        }
-        
-        for (i=0, total_tick[count] = 0; i<10; i++)
-        { total_tick[count] += fields[i]; }
-        idle[count] = fields[3];
-        
-        del_total_tick[count] = total_tick[count] - total_tick_old[count];
-        del_idle[count] = idle[count] - idle_old[count];
-        
-        percent_usage =
-            ((del_total_tick[count] - del_idle[count]) / (double) del_total_tick[count]) * 100;
-
-        cpu[count] = percent_usage;
-    }
+      total_tick_old[count] = total_tick[count];
+      idle_old[count] = idle[count];
     
-    fclose (fp);
+      if (!read_fields (fp, fields))
+      { return; }
+
+      for (i=0, total_tick[count] = 0; i<10; i++)
+      { total_tick[count] += fields[i]; }
+      idle[count] = fields[3];
+
+      del_total_tick[count] = total_tick[count] - total_tick_old[count];
+      del_idle[count] = idle[count] - idle_old[count];
+
+      percent_usage = ((del_total_tick[count] - del_idle[count]) / (double) del_total_tick[count]) * 100;
+      if (count == 0)
+      { printf ("Total CPU Usage: %3.2lf%%\n", percent_usage); }
+      else 
+      { printf ("\tCPU%d Usage: %3.2lf%%\n", count - 1, percent_usage); }
+
+      cpu[count] = (int)percent_usage;
+    }
+    update_cycle++;
+    printf ("\n");
+  }
+
+  /* Ctrl + C quit, therefore this will not be reached. We rely on the kernel to close this file */
+  fclose (fp);
 }

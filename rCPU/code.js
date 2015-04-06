@@ -8,9 +8,9 @@ function get_cpu_use()
 	$.ajax({
 		url: "cpu.api",
 		type: "post",
-		data: { counter:$("#counter").text() }
+		data: { counter:"0" }
 	}).done(function(data)
 	{
-		$("#counter").text(data[1]);
+		$("#counter").text(JSON.parse(data)[0]);
 	});
 }
