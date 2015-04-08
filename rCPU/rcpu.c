@@ -42,16 +42,23 @@ void send_response(struct hitArgs *args, char*, char*, http_verb);
 void log_filter(log_type, char*, char*, int);
 void send_api_response(struct hitArgs *args, char*, char*);
 void send_file_response(struct hitArgs *args, char*, char*, int);
-void get_cpu_use(int *cpu, int len);
+int get_cpu_count();
+void get_cpu_use(int *arr, int len);
+
+int max_cpu=0;
+int *arr;
 
 int main(int argc, char **argv)
 {
-    if (argc < 2 || !strncmp(argv[1], "-h", 2))
+	if (argc < 2 || !strncmp(argv[1], "-h", 2))
 	{
 		printf("hint: rcpu [port number]\n");
 		return 0;
 	}
-    
+	
+    max_cpu = get_cpu_count();
+	 arr = malloc(max_cpu * sizeof(int));
+
     // don't read from the console or log anything
     dwebserver(atoi(argv[1]), &send_response, &log_filter);
 }
@@ -76,9 +83,6 @@ void send_response(struct hitArgs *args, char *path, char *request_body, http_ve
     send_file_response(args, path, request_body, path_length);
 }
 
-#define MAX_CPU 128
-int arr[MAX_CPU] = { 0 };
-
 // a simple API, it receives a number, increments it and returns the response
 void send_api_response(struct hitArgs *args, char *path, char *request_body)
 {
@@ -86,15 +90,15 @@ void send_api_response(struct hitArgs *args, char *path, char *request_body)
         
 	if (args->form_value_counter==1 && !strncmp(form_name(args, 0), "counter", strlen(form_name(args, 0))))
 	{
-        get_cpu_use(&arr[0], MAX_CPU);
+        get_cpu_use(arr, max_cpu);
         
         STRING *response = new_string(32);
         string_add(response, "[");
-        for (int p=0; p<MAX_CPU; p++)
+        for (int p=0; p<max_cpu; p++)
         {
             sprintf(tmp, "%d", arr[p]);
             string_add(response, tmp);
-            if (p<MAX_CPU-1)
+            if (p<max_cpu-1)
             {
                 string_add(response, ", ");
             }
@@ -102,7 +106,7 @@ void send_api_response(struct hitArgs *args, char *path, char *request_body)
         string_add(response, "]");
         
         int c = atoi(form_value(args, 0));
-		if (c>MAX_CPU) c=0;
+		if (c > max_cpu) c=0;
         // TODO: use c if needed
 		
 		ok_200(args, "\nContent-Type: text/plain", string_chars(response), path);
@@ -212,34 +216,50 @@ int read_fields (FILE *fp, unsigned long long int *fields)
   return 1;
 }
 
-void get_cpu_use(int cpu[], int len)
+// TODO: make this simpler, just count the number of lines?
+int get_cpu_count()
 {
-  FILE *fp;
-  unsigned long long int fields[10], total_tick[MAX_CPU], total_tick_old[MAX_CPU], idle[MAX_CPU], idle_old[MAX_CPU], del_total_tick[MAX_CPU], del_idle[MAX_CPU];
-  int i, cpus = 0, count;
-  double percent_usage;
+	int count=0;
+	unsigned long long int fields[10];
+	FILE *fp = fopen ("/proc/stat", "r");
+	if (fp == NULL)
+	{
+		return -1;
+	}
 
-  fp = fopen ("/proc/stat", "r");
-  if (fp == NULL)
-  {
-    return;
-  }
+	while (read_fields (fp, fields) != -1) count++;
+	fclose (fp);
 
-  while (read_fields (fp, fields) != -1)
-  {
-    for (i=0, total_tick[cpus] = 0; i<10; i++)
-    {
-        total_tick[cpus] += fields[i];
-    }
-    idle[cpus] = fields[3]; /* idle ticks index */
-    cpus++;
-  }
+   return count;
+}
 
-    sleep (1);
-    fseek (fp, 0, SEEK_SET);
-    fflush (fp);
+void get_cpu_use(int *cpu, int len)
+{
+	unsigned long long int fields[10], total_tick[len], total_tick_old[len], idle[len], idle_old[len], del_total_tick[len], del_idle[len];
+	int i, count, cpus = 0;
+	double percent_usage;
 
-    for (count = 0; count < cpus; count++)
+	FILE *fp = fopen ("/proc/stat", "r");
+	if (fp == NULL)
+	{
+		return;
+	}
+
+	while (read_fields (fp, fields) != -1)
+	{
+		for (i=0, total_tick[cpus] = 0; i<10; i++)
+		{
+			total_tick[cpus] += fields[i];
+		}
+		idle[cpus] = fields[3]; /* idle ticks index */
+		cpus++;
+	}
+
+	sleep (1);
+	fseek (fp, 0, SEEK_SET);
+	fflush (fp);
+
+    for (count = 0; count < len; count++)
     {
       total_tick_old[count] = total_tick[count];
       idle_old[count] = idle[count];
@@ -271,5 +291,6 @@ void get_cpu_use(int cpu[], int len)
       cpu[count] = (int)percent_usage;
     }
     
-  fclose (fp);
+	fclose (fp);
 }
+

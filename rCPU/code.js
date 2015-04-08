@@ -32,6 +32,8 @@ function initChart(cpuId)
   };
   var timeline = new SmoothieChart(
   { 
+     maxValue: 100,
+     minValue: 0,
      millisPerPixel: 20,
      grid:
      {
