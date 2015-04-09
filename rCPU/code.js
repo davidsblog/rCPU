@@ -1,18 +1,12 @@
-var cpuDataSets = [new TimeSeries(), new TimeSeries(), new TimeSeries(), new TimeSeries()];
+var cpuDataSets = [];
 
 $(function() {
   $("#status").text("");
 
-  get_cpu_use();
   get_temp();
-  initChart(0);
-  $("#cpu0").after("<br/><canvas id=\"cpu1\" width=\"500\" height=\"100\"></canvas>");
-  initChart(1);
-  
+  get_cpu_use();
   setInterval("get_cpu_use()", 500);
-  
   setInterval("get_temp()", 5000);
-  
 });
 
 function get_cpu_use()
@@ -23,9 +17,30 @@ function get_cpu_use()
 		data: { counter:"0" }
 	}).done(function(cpu_info)
 	{
-       $("#counter").text(cpu_info[0]+" ("+cpu_info.length+" CPUs)");
-       cpuDataSets[0].append(new Date().getTime(), cpu_info[0]);
-	   cpuDataSets[1].append(new Date().getTime(), cpu_info[1]);
+      $("#cpuinfo").text(cpu_info[0]+"% ("+(cpu_info.length-1)+" CPUs)");       
+      var needs_init = 0;
+      
+      if (cpuDataSets.length==0)
+      {
+         needs_init = 1;
+         for (var n=cpu_info.length-1; n>=0; n--)
+         {
+            cpuDataSets.push(new TimeSeries());            
+            if (n>0)
+            {
+               $("#cpu0").after("<br/><canvas id=\"cpu" + n +"\" width=\"500\" height=\"100\" />");
+            }
+   	   }
+      }
+	    
+      for (var n=0; n<cpu_info.length; n++)
+      {
+         cpuDataSets[n].append(new Date().getTime(), cpu_info[n]);
+         if (needs_init == 1)
+         {
+            initChart(n);
+         }
+      }
 	});
 }
 
@@ -42,12 +57,25 @@ function get_temp()
 
 function initChart(cpuId)
 {
-  var seriesOptions =
-  { 
+  var seriesOptions;
+  if (cpuId==0)
+  {
+    seriesOptions =
+    { 
+      strokeStyle: 'rgba(255, 0, 0, 1)',
+      fillStyle: 'rgba(255, 0, 0, 0.2)',
+      lineWidth: 3
+    };
+  }
+  else
+  {
+    seriesOptions =
+    { 
      strokeStyle: 'rgba(0, 255, 0, 1)',
      fillStyle: 'rgba(0, 255, 0, 0.2)',
-     lineWidth: 3 
-  };
+     lineWidth: 2
+    };
+  }
   var timeline = new SmoothieChart(
   {
      labels: {disabled: true},
