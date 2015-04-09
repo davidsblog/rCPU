@@ -43,7 +43,8 @@ struct {
 
 void send_response(struct hitArgs *args, char*, char*, http_verb);
 void log_filter(log_type, char*, char*, int);
-void send_api_response(struct hitArgs *args, char*, char*);
+void send_cpu_response(struct hitArgs *args, char*, char*);
+void send_temp_response(struct hitArgs *args, char*, char*);
 void send_file_response(struct hitArgs *args, char*, char*, int);
 int get_cpu_count();
 void get_cpu_use(int *arr, int len);
@@ -77,10 +78,14 @@ void log_filter(log_type type, char *s1, char *s2, int socket_fd)
 void send_response(struct hitArgs *args, char *path, char *request_body, http_verb type)
 {
     int path_length=(int)strlen(path);
-    if (!strncmp(&path[path_length-3], "api", 3))
+    if (!strncmp(&path[path_length-7], "cpu.api", 7))
 	{
-		return send_api_response(args, path, request_body);
+		return send_cpu_response(args, path, request_body);
 	}
+    if (!strncmp(&path[path_length-8], "temp.api", 8))
+    {
+        return send_temp_response(args, path, request_body);
+    }
     if (path_length==0)
 	{
         return send_file_response(args, "index.html", request_body, 10);
@@ -88,8 +93,8 @@ void send_response(struct hitArgs *args, char *path, char *request_body, http_ve
     send_file_response(args, path, request_body, path_length);
 }
 
-// a simple API, it receives a number, increments it and returns the response
-void send_api_response(struct hitArgs *args, char *path, char *request_body)
+// receives a number, returns the current CPU use
+void send_cpu_response(struct hitArgs *args, char *path, char *request_body)
 {
 	char tmp[4];
         
@@ -121,6 +126,42 @@ void send_api_response(struct hitArgs *args, char *path, char *request_body)
 	{
 		forbidden_403(args, "Bad request");
 	}
+}
+
+// receives a number, returns the current CPU temperature
+void send_temp_response(struct hitArgs *args, char *path, char *request_body)
+{
+#ifdef __APPLE__
+    char tmp[13];
+    double cpu_temp = rand() % 100;
+    STRING *response = new_string(32);
+    sprintf(tmp, "%6.3f C", cpu_temp);
+    string_add(response, tmp);
+    ok_200(args, "\nContent-Type: text/plain", string_chars(response), path);
+    string_free(response);
+    return;
+#else
+    char tmp[13];
+    double cpu_temp = 0;
+    STRING *response = new_string(32);
+    
+    FILE *temperature = fopen ("/sys/class/thermal/thermal_zone0/temp", "r");
+    if (temperature != NULL)
+    {
+        fscanf(temperature, "%lf", &cpu_temp);
+        cpu_temp /= 1000;
+        sprintf(tmp, "%6.3f C", cpu_temp);
+        fclose (temperature);
+    }
+    else
+    {
+        sprintf(tmp, "unknown");
+    }
+    
+    string_add(response, tmp);
+    ok_200(args, "\nContent-Type: text/plain", string_chars(response), path);
+    string_free(response);
+#endif
 }
 
 void send_file_response(struct hitArgs *args, char *path, char *request_body, int path_length)

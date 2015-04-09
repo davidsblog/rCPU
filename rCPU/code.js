@@ -7,6 +7,9 @@ $(function() {
   initChart(1);
 
   setInterval("get_cpu_use()", 500);
+  
+  setInterval("get_temp()", 5000);
+  
 });
 
 function get_cpu_use()
@@ -21,6 +24,17 @@ function get_cpu_use()
        $("#counter").text(cpu_info[0]+" ("+cpu_info.length+" CPUs)");
 	   cpuDataSet.append(new Date().getTime(), cpu_info[0]);
 	});
+}
+
+function get_temp()
+{
+    $.ajax({
+        url: "temp.api",
+        type: "post",
+    }).done(function(data)
+    {
+        $("#temp").text(data);
+    });
 }
 
 function initChart(cpuId)
