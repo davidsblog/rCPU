@@ -17,8 +17,9 @@ function get_cpu_use()
 		data: { counter:"0" }
 	}).done(function(data)
 	{
-		$("#counter").text(JSON.parse(data)[0]);
-	   cpuDataSet.append(new Date().getTime(), JSON.parse(data)[0]);
+       var cpu_info = data;
+       $("#counter").text(cpu_info[0]+" ("+cpu_info.length+" CPUs)");
+	   cpuDataSet.append(new Date().getTime(), cpu_info[0]);
 	});
 }
 
@@ -26,8 +27,8 @@ function initChart(cpuId)
 {
   var seriesOptions =
   { 
-     strokeStyle: 'rgba(255, 0, 0, 1)',
-     fillStyle: 'rgba(255, 0, 0, 0.1)',
+     strokeStyle: 'rgba(0, 255, 0, 1)',
+     fillStyle: 'rgba(0, 255, 0, 0.2)',
      lineWidth: 3 
   };
   var timeline = new SmoothieChart(

@@ -7,6 +7,9 @@
 #include <pthread.h> // needed to run server on a new thread
 #include <termios.h> // needed for unbuffered_getch()
 
+#include <stdio.h>
+#include <unistd.h>
+
 #include "dwebsvr.h"
 
 #define FILE_CHUNK_SIZE 1024
@@ -45,7 +48,7 @@ void send_file_response(struct hitArgs *args, char*, char*, int);
 int get_cpu_count();
 void get_cpu_use(int *arr, int len);
 
-int max_cpu=0;
+int max_cpu;
 int *arr;
 
 int main(int argc, char **argv)
@@ -57,10 +60,12 @@ int main(int argc, char **argv)
 	}
 	
     max_cpu = get_cpu_count();
-	 arr = malloc(max_cpu * sizeof(int));
+    arr = malloc(max_cpu * sizeof(int));
 
     // don't read from the console or log anything
     dwebserver(atoi(argv[1]), &send_response, &log_filter);
+    
+    return 1; // just to stop compiler complaints
 }
 
 void log_filter(log_type type, char *s1, char *s2, int socket_fd)
@@ -98,7 +103,7 @@ void send_api_response(struct hitArgs *args, char *path, char *request_body)
         {
             sprintf(tmp, "%d", arr[p]);
             string_add(response, tmp);
-            if (p<max_cpu-1)
+            if (p < max_cpu-1)
             {
                 string_add(response, ", ");
             }
@@ -109,7 +114,7 @@ void send_api_response(struct hitArgs *args, char *path, char *request_body)
 		if (c > max_cpu) c=0;
         // TODO: use c if needed
 		
-		ok_200(args, "\nContent-Type: text/plain", string_chars(response), path);
+		ok_200(args, "\nContent-Type: application/json", string_chars(response), path);
         string_free(response);
 	}
 	else
@@ -178,8 +183,6 @@ void send_file_response(struct hitArgs *args, char *path, char *request_body, in
 /* Show per core CPU utilization of the system
  * This is a part of the post http://phoxis.org/2013/09/05/finding-overall-and-per-core-cpu-utilization
  */
-#include <stdio.h>
-#include <unistd.h>
 
 #define BUF_MAX 1024
 
@@ -192,6 +195,7 @@ int read_fields (FILE *fp, unsigned long long int *fields)
   {
       return -1;
   }
+
   /* line starts with c and a string. This is to handle cpu, cpu[0-9]+ */
   retval = sscanf (buffer, "c%*s %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu",
                             &fields[0], 
@@ -199,7 +203,7 @@ int read_fields (FILE *fp, unsigned long long int *fields)
                             &fields[2], 
                             &fields[3], 
                             &fields[4], 
-                            &fields[5], 
+                            &fields[5],
                             &fields[6], 
                             &fields[7], 
                             &fields[8], 
@@ -208,18 +212,24 @@ int read_fields (FILE *fp, unsigned long long int *fields)
   {
       return -1;
   }
+
   if (retval < 4) /* At least 4 fields is to be read */
   {
     fprintf (stderr, "Error reading /proc/stat cpu field\n");
     return 0;
   }
+
   return 1;
 }
 
 // TODO: make this simpler, just count the number of lines?
 int get_cpu_count()
 {
-	int count=0;
+#ifdef __APPLE__
+        return 2;
+#endif
+    
+    int count=0;
 	unsigned long long int fields[10];
 	FILE *fp = fopen ("/proc/stat", "r");
 	if (fp == NULL)
@@ -228,9 +238,8 @@ int get_cpu_count()
 	}
 
 	while (read_fields (fp, fields) != -1) count++;
-	fclose (fp);
-
-   return count;
+    fclose (fp);
+    return count;
 }
 
 void get_cpu_use(int *cpu, int len)
@@ -239,6 +248,15 @@ void get_cpu_use(int *cpu, int len)
 	int i, count, cpus = 0;
 	double percent_usage;
 
+    
+#ifdef __APPLE__
+    for (count = 0; count < len; count++)
+    {
+        cpu[count] = rand() % 100;
+    }
+    return;
+#endif
+    
 	FILE *fp = fopen ("/proc/stat", "r");
 	if (fp == NULL)
 	{
@@ -266,6 +284,7 @@ void get_cpu_use(int *cpu, int len)
     
       if (!read_fields (fp, fields))
       {
+          fclose (fp);
           return;
       }
 
