@@ -207,9 +207,8 @@ void send_file_response(struct hitArgs *args, char *path, char *request_body, in
 	sleep(1);
 }
 
-/* Show per core CPU utilization of the system
- * This is a part of the post http://phoxis.org/2013/09/05/finding-overall-and-per-core-cpu-utilization
- */
+
+// this was adapted from here: http://phoxis.org/2013/09/05/finding-overall-and-per-core-cpu-utilization
 
 #define BUF_MAX 1024
 
@@ -224,17 +223,10 @@ int read_fields (FILE *fp, unsigned long long int *fields)
   }
 
   /* line starts with c and a string. This is to handle cpu, cpu[0-9]+ */
-  retval = sscanf (buffer, "c%*s %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu %Lu",
-                            &fields[0], 
-                            &fields[1], 
-                            &fields[2], 
-                            &fields[3], 
-                            &fields[4], 
-                            &fields[5],
-                            &fields[6], 
-                            &fields[7], 
-                            &fields[8], 
-                            &fields[9]); 
+  retval = sscanf (buffer, "c%*s %llu %llu %llu %llu %llu %llu %llu %llu %llu %llu",
+        &fields[0], &fields[1], &fields[2], &fields[3], &fields[4],
+        &fields[5], &fields[6], &fields[7], &fields[8], &fields[9]);
+
   if (retval == 0)
   {
       return -1;
@@ -322,20 +314,10 @@ void get_cpu_use(int *cpu, int len)
 
       del_total_tick[count] = total_tick[count] - total_tick_old[count];
       del_idle[count] = idle[count] - idle_old[count];
-
       percent_usage = ((del_total_tick[count] - del_idle[count]) / (double) del_total_tick[count]) * 100;
-      /*if (count == 0)
-      {
-          printf ("Total CPU Usage: %3.2lf%%\n", percent_usage);
-      }
-      else 
-      {
-          printf ("\tCPU%d Usage: %3.2lf%%\n", count - 1, percent_usage);
-      }*/
-
+      
       cpu[count] = (int)percent_usage;
     }
     
 	fclose (fp);
 }
-
