@@ -5,7 +5,7 @@ $(function() {
 
   get_temp();
   get_cpu_use();
-  setInterval("get_cpu_use()", 500);
+  setInterval("get_cpu_use()", 1000);
   setInterval("get_temp()", 5000);
 });
 
@@ -17,7 +17,7 @@ function get_cpu_use()
 		data: { counter:"0" }
 	}).done(function(cpu_info)
 	{
-      $("#cpuinfo").text(cpu_info[0]+"% ("+(cpu_info.length-1)+" CPUs)");       
+      $("#cpuinfo").text(cpu_info[0]+"% ("+(cpu_info.length-1)+" CPU)");       
       var needs_init = 0;
       
       if (cpuDataSets.length==0)
@@ -91,6 +91,6 @@ function initChart(cpuId)
      }
   });
   timeline.addTimeSeries(cpuDataSets[cpuId], seriesOptions);
-  timeline.streamTo(document.getElementById('cpu'+cpuId), 500);
+  timeline.streamTo(document.getElementById('cpu'+cpuId), 1000);
 }
 
