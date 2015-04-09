@@ -288,7 +288,6 @@ void get_cpu_use(int *cpu, int len)
 	unsigned long long int fields[10], total_tick[len], total_tick_old[len], idle[len], idle_old[len], del_total_tick[len], del_idle[len];
 	int i, count, cpus = 0;
 	double percent_usage;
-
     
 #ifdef __APPLE__
     for (count = 0; count < len; count++)

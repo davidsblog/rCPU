@@ -1,11 +1,14 @@
-var cpuDataSet = new TimeSeries();
+var cpuDataSets = [new TimeSeries(), new TimeSeries(), new TimeSeries(), new TimeSeries()];
 
 $(function() {
   $("#status").text("");
 
   get_cpu_use();
+  get_temp();
+  initChart(0);
+  $("#cpu0").after("<br/><canvas id=\"cpu1\" width=\"500\" height=\"100\"></canvas>");
   initChart(1);
-
+  
   setInterval("get_cpu_use()", 500);
   
   setInterval("get_temp()", 5000);
@@ -18,11 +21,11 @@ function get_cpu_use()
 		url: "cpu.api",
 		type: "post",
 		data: { counter:"0" }
-	}).done(function(data)
+	}).done(function(cpu_info)
 	{
-       var cpu_info = data;
        $("#counter").text(cpu_info[0]+" ("+cpu_info.length+" CPUs)");
-	   cpuDataSet.append(new Date().getTime(), cpu_info[0]);
+       cpuDataSets[0].append(new Date().getTime(), cpu_info[0]);
+	   cpuDataSets[1].append(new Date().getTime(), cpu_info[1]);
 	});
 }
 
@@ -46,7 +49,8 @@ function initChart(cpuId)
      lineWidth: 3 
   };
   var timeline = new SmoothieChart(
-  { 
+  {
+     labels: {disabled: true},
      maxValue: 100,
      minValue: 0,
      millisPerPixel: 20,
@@ -58,7 +62,7 @@ function initChart(cpuId)
         verticalSections: 4 
      }
   });
-  timeline.addTimeSeries(cpuDataSet, seriesOptions);
+  timeline.addTimeSeries(cpuDataSets[cpuId], seriesOptions);
   timeline.streamTo(document.getElementById('cpu'+cpuId), 500);
 }
 
