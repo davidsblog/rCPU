@@ -1,32 +1,5 @@
-# Object files
-*.o
-*.ko
-*.obj
-*.elf
+rCPU.xcodeproj/
 
-# Precompiled Headers
-*.gch
-*.pch
-
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
-*.so
-*.so.*
-*.dylib
-
-# Executables
-*.exe
-*.out
-*.app
-*.i*86
-*.x86_64
-*.hex
-
-# Debug files
-*.dSYM/
+# osx noise
+.DS_Store
+profile
