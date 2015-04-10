@@ -1,5 +1,5 @@
 # rCPU
-A minimal webserver for remote CPU monitoring (on Linux).  Everything is embedded in the executable, so you just need to run the program.  I'm planning to run it on my Raspberry Pi 2 to monitor the use of each core.  It should run on other Linux machines too.
+A minimal webserver for remote CPU monitoring (on Linux).  Everything is embedded in the executable, so you just need to run the program.  I'm planning to run it on my Raspberry Pi 2 to monitor the use of each core.  Although it should run on other Linux machines too.
 
 The program will automatically adjust the display according to the number of CPU cores.
 
@@ -33,4 +33,4 @@ I am using the following javascript libraries:
 - https://jquery.com/ jQuery (v2.1.0)
 - https://github.com/joewalnes/smoothie/ Smoothie Charts 
 
-Thanks to all involved.
+Thanks to all involved with those projects.
