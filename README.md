@@ -13,6 +13,8 @@ make
 sudo ./rcpu 80
 ```
 
+You might have a webserver already running on port 80, in which case you can specify a different port by passing a different parameter than **80** in the last line above.
+
 ###Changing the embedded content
 The html and javascript files are embedded in the executable.  If you wish to change some of the html or javascript, you can edit them and then rebuild. The process is as follows:
 ```
