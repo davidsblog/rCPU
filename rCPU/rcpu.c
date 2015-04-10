@@ -153,10 +153,8 @@ double get_temp()
     {
         double cpu_temp = 0;
         fscanf(temperature, "%lf", &cpu_temp);
-        cpu_temp /= 1000;
-        sprintf(tmp, "%6.3f C", cpu_temp);
         fclose (temperature);
-        return cpu_temp;
+        return cpu_temp / 1000;
     }
     else
     {
