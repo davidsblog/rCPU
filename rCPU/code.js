@@ -1,52 +1,50 @@
 var cpuDataSets = [];
 
 $(function() {
-  $("#status").text("");
+	$("#status").text("");
 
-  get_temp();
-  get_cpu_use();
-  setInterval("get_cpu_use()", 1000);
-  setInterval("get_temp()", 5000);
+	get_temp();
+	get_cpu_use();
+	setInterval("get_cpu_use()", 1000);
+	setInterval("get_temp()", 5000);
 });
 
 function get_cpu_use()
 {
-	$.ajax({
+   $.ajax({
 		url: "cpu.api",
 		type: "post",
 		data: { counter:"0" }
 	}).done(function(cpu_info)
 	{
-      $("#cpuinfo").text(cpu_info[0]+"% ("+(cpu_info.length-1)+" CPU)");       
-      var needs_init = 0;
-      
-      if (cpuDataSets.length==0)
-      {
-         needs_init = 1;
-         for (var n=cpu_info.length-1; n>=0; n--)
-         {
-            cpuDataSets.push(new TimeSeries());            
-            if (n>0)
-            {
-               $("#cpu0").after("<br/><canvas id=\"cpu" + n +"\" width=\"500\" height=\"100\" />");
-            }
-   	   }
-      }
-	    
-      for (var n=0; n<cpu_info.length; n++)
-      {
-         cpuDataSets[n].append(new Date().getTime(), cpu_info[n]);
-         if (needs_init == 1)
-         {
-            initChart(n);
-         }
-      }
+    	$("#cpuinfo").text(cpu_info[0]+"% ("+(cpu_info.length-1)+" CPU)");       
+     	var needs_init = 0;
+    	if (cpuDataSets.length==0)
+    	{
+        	needs_init = 1;
+        	for (var n=cpu_info.length-1; n>=0; n--)
+        	{
+            	cpuDataSets.push(new TimeSeries());            
+            	if (n>0)
+            	{
+            		$("#cpu0").after("<br/><canvas id=\"cpu" + n +"\" width=\"500\" height=\"100\" />");
+            	}
+   	  		}
+    	}
+    	for (var n=0; n<cpu_info.length; n++)
+    	{
+    		cpuDataSets[n].append(new Date().getTime(), cpu_info[n]);
+        	if (needs_init == 1)
+        	{
+        		initChart(n);
+        	}
+      	}
 	});
 }
 
 function get_temp()
 {
-    $.ajax({
+	$.ajax({
         url: "temp.api",
         type: "post",
     }).done(function(data)
@@ -79,8 +77,8 @@ function initChart(cpuId)
   var timeline = new SmoothieChart(
   {
      labels: {disabled: true},
-     maxValue: 100,
-     minValue: 0,
+     maxValue: 103,
+     minValue: -3,
      millisPerPixel: 20,
      grid:
      {
