@@ -3,4 +3,12 @@ A minimal webserver for remote CPU monitoring.  Everything is embedded in the ex
 
 The program will automatically adjust the display according to the numer of CPU cores.
 
-NOTE: the code to check the core temperature is designed for the Raspberry Pi, it might not work on other machines...
+###How to build and run
+```
+git clone https://github.com/davidsblog/rCPU
+cd rCPU/rCPU/
+make
+sudo ./rcpu 80
+```
+
+**NOTE:** the code to display the core temperature is designed for the Raspberry Pi, it might not work on other machines.
