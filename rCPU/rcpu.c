@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
 void* polling_thread(void *args)
 {
-    int i=0;
+    int i=5;
     while (1)
     {
         if (++i >= 5)
@@ -86,10 +86,7 @@ void send_response(struct hitArgs *args, char *path, char *request_body, http_ve
     {
         return send_temp_response(args, path, request_body);
     }
-    if (path_length==0)
-	{
-        return send_file_response(args, "index.html", request_body, 10);
-	}
+    
     send_file_response(args, path, request_body, path_length);
 }
 
@@ -220,8 +217,7 @@ void send_file_response(struct hitArgs *args, char *path, char *request_body, in
 	sleep(1);
 }
 
-
-// this was adapted from here: http://phoxis.org/2013/09/05/finding-overall-and-per-core-cpu-utilization
+// adapted from here: http://phoxis.org/2013/09/05/finding-overall-and-per-core-cpu-utilization
 
 #define BUF_MAX 1024
 
@@ -258,7 +254,8 @@ int read_fields (FILE *fp, unsigned long long int *fields)
 int get_cpu_count()
 {
 #ifdef __APPLE__
-        return 2;
+    // just so that I can test it in xcode on my mac...
+    return 2;
 #endif
     int count=0;
 	unsigned long long int fields[10];
@@ -283,6 +280,7 @@ void get_cpu_use(int *cpu, int len)
 	double percent_usage;
     
 #ifdef __APPLE__
+    // just so that I can test it in xcode on my mac...
     for (count = 0; count < len; count++)
     {
         cpu[count] = rand() % 100;
