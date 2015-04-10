@@ -6,6 +6,9 @@ The program will automatically adjust the display according to the number of CPU
 **NOTE:** the code to display the core temperature is designed for the Raspberry Pi, it might not work on other machines.
 
 ###How to build and run
+
+Just do this:
+
 ```
 git clone https://github.com/davidsblog/rCPU
 cd rCPU/rCPU/
