@@ -23,3 +23,11 @@ make
 ```
 
 Each resource file becomes a C header file.  The `make res` command updates the header files and then you can just rebuild as normal using `make`.
+
+###Thanks
+
+I am using the following javascript libraries:
+- https://jquery.com/ jQuery (v2.1.0)
+- https://github.com/joewalnes/smoothie/ Smoothie Charts 
+
+Thanks to all involved.
