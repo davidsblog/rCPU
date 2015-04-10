@@ -22,11 +22,13 @@ void send_cpu_response(struct hitArgs *args, char*, char*);
 void send_temp_response(struct hitArgs *args, char*, char*);
 int path_ends_with(char *path, char *match);
 void send_file_response(struct hitArgs *args, char*, char*, int);
+double get_temp();
 int get_cpu_count();
 void get_cpu_use(int *arr, int len);
 
 int max_cpu;
 int *arr;
+double temp;
 pthread_t polling_thread_id;
 
 int main(int argc, char **argv)
@@ -54,10 +56,15 @@ int main(int argc, char **argv)
 
 void* polling_thread(void *args)
 {
+    int i=0;
     while (1)
     {
+        if (++i >= 5)
+        {
+            temp = get_temp();
+            i=0;
+        }
         get_cpu_use(arr, max_cpu);
-        sleep(1);
     }
     return NULL;
 }
@@ -122,27 +129,12 @@ void send_cpu_response(struct hitArgs *args, char *path, char *request_body)
 // receives a number, returns the current CPU temperature
 void send_temp_response(struct hitArgs *args, char *path, char *request_body)
 {
-#ifdef __APPLE__
     char tmp[13];
-    double cpu_temp = rand() % 100;
-    STRING *response = new_string(32);
-    sprintf(tmp, "%6.3f C", cpu_temp);
-    string_add(response, tmp);
-    ok_200(args, "\nContent-Type: text/plain", string_chars(response), path);
-    string_free(response);
-    return;
-#else
-    char tmp[13];
-    double cpu_temp = 0;
     STRING *response = new_string(32);
     
-    FILE *temperature = fopen ("/sys/class/thermal/thermal_zone0/temp", "r");
-    if (temperature != NULL)
+    if (temp >= 0)
     {
-        fscanf(temperature, "%lf", &cpu_temp);
-        cpu_temp /= 1000;
-        sprintf(tmp, "%6.3f C", cpu_temp);
-        fclose (temperature);
+        sprintf(tmp, "%6.3f C", temp);
     }
     else
     {
@@ -152,6 +144,27 @@ void send_temp_response(struct hitArgs *args, char *path, char *request_body)
     string_add(response, tmp);
     ok_200(args, "\nContent-Type: text/plain", string_chars(response), path);
     string_free(response);
+}
+
+double get_temp()
+{
+#ifdef __APPLE__
+    return rand() % 100;
+#else
+    FILE *temperature = fopen ("/sys/class/thermal/thermal_zone0/temp", "r");
+    if (temperature != NULL)
+    {
+        double cpu_temp = 0;
+        fscanf(temperature, "%lf", &cpu_temp);
+        cpu_temp /= 1000;
+        sprintf(tmp, "%6.3f C", cpu_temp);
+        fclose (temperature);
+        return cpu_temp;
+    }
+    else
+    {
+        return -1;
+    }
 #endif
 }
 
@@ -247,7 +260,6 @@ int get_cpu_count()
 #ifdef __APPLE__
         return 2;
 #endif
-    
     int count=0;
 	unsigned long long int fields[10];
 	FILE *fp = fopen ("/proc/stat", "r");
@@ -256,7 +268,10 @@ int get_cpu_count()
 		return -1;
 	}
 
-	while (read_fields (fp, fields) != -1) count++;
+	while (read_fields (fp, fields) != -1)
+    {
+        count++;
+    }
     fclose (fp);
     return count;
 }
@@ -272,6 +287,7 @@ void get_cpu_use(int *cpu, int len)
     {
         cpu[count] = rand() % 100;
     }
+    sleep(1);
     return;
 #endif
     
