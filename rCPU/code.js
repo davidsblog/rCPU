@@ -1,11 +1,11 @@
 var cpuDataSets = [];
 
 $(function() {
-  $("#status").text("");
-  get_temp();
-  get_cpu_use();
-  setInterval("get_cpu_use()", 1000);
-  setInterval("get_temp()", 5000);
+	$("#status").text("");
+	get_temp();
+	get_cpu_use();
+	setInterval("get_cpu_use()", 1000);
+	setInterval("get_temp()", 5000);
 });
 
 function get_cpu_use()
