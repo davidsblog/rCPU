@@ -2,7 +2,6 @@ var cpuDataSets = [];
 
 $(function() {
   $("#status").text("");
-
   get_temp();
   get_cpu_use();
   setInterval("get_cpu_use()", 1000);
@@ -93,4 +92,3 @@ function initChart(cpuId)
   timeline.addTimeSeries(cpuDataSets[cpuId], seriesOptions);
   timeline.streamTo(document.getElementById('cpu'+cpuId), 1000);
 }
-

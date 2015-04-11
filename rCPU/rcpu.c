@@ -1,11 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
 #include <string.h>
 #include <unistd.h>
-#include <errno.h>
-#include <pthread.h> // needed to run server on a new thread
-#include <termios.h> // needed for unbuffered_getch()
+#include <pthread.h>
 
 #include "dwebsvr.h"
 
@@ -254,28 +251,27 @@ int get_cpu_count()
 #ifdef __APPLE__
     // just so that I can test it in xcode on my mac...
     return 2;
-#endif
+#else
     int count=0;
-	unsigned long long int fields[10];
-	FILE *fp = fopen ("/proc/stat", "r");
-	if (fp == NULL)
-	{
-		return -1;
-	}
-
-	while (read_fields (fp, fields) != -1)
+    unsigned long long int fields[10];
+    FILE *fp = fopen ("/proc/stat", "r");
+    if (fp == NULL)
+    {
+        return -1;
+    }
+    
+    while (read_fields (fp, fields) != -1)
     {
         count++;
     }
     fclose (fp);
     return count;
+#endif
 }
 
 void get_cpu_use(int *cpu, int len)
 {
-	unsigned long long int fields[10], total_tick[len], total_tick_old[len], idle[len], idle_old[len], del_total_tick[len], del_idle[len];
-	int i, count, cpus = 0;
-	double percent_usage;
+	int count;
     
 #ifdef __APPLE__
     // just so that I can test it in xcode on my mac...
@@ -285,51 +281,55 @@ void get_cpu_use(int *cpu, int len)
     }
     sleep(1);
     return;
-#endif
+#else
+    unsigned long long int fields[10], total_tick[len], total_tick_old[len], idle[len], idle_old[len], del_total_tick[len], del_idle[len];
+    int i, cpus = 0;
+    double percent_usage;
     
-	FILE *fp = fopen ("/proc/stat", "r");
-	if (fp == NULL)
-	{
-		return;
-	}
-
-	while (read_fields (fp, fields) != -1)
-	{
-		for (i=0, total_tick[cpus] = 0; i<10; i++)
-		{
-			total_tick[cpus] += fields[i];
-		}
-		idle[cpus] = fields[3]; /* idle ticks index */
-		cpus++;
-	}
-
-	sleep (1);
-	fseek (fp, 0, SEEK_SET);
-	fflush (fp);
-
-    for (count = 0; count < len; count++)
+    FILE *fp = fopen ("/proc/stat", "r");
+    if (fp == NULL)
     {
-      total_tick_old[count] = total_tick[count];
-      idle_old[count] = idle[count];
-    
-      if (!read_fields (fp, fields))
-      {
-          fclose (fp);
-          return;
-      }
-
-      for (i=0, total_tick[count] = 0; i<10; i++)
-      {
-          total_tick[count] += fields[i];
-      }
-      idle[count] = fields[3];
-
-      del_total_tick[count] = total_tick[count] - total_tick_old[count];
-      del_idle[count] = idle[count] - idle_old[count];
-      percent_usage = ((del_total_tick[count] - del_idle[count]) / (double) del_total_tick[count]) * 100;
-      
-      cpu[count] = (int)percent_usage;
+        return;
     }
     
-	fclose (fp);
+    while (read_fields (fp, fields) != -1)
+    {
+        for (i=0, total_tick[cpus] = 0; i<10; i++)
+        {
+            total_tick[cpus] += fields[i];
+        }
+        idle[cpus] = fields[3]; /* idle ticks index */
+        cpus++;
+    }
+    
+    sleep (1);
+    fseek (fp, 0, SEEK_SET);
+    fflush (fp);
+    
+    for (count = 0; count < len; count++)
+    {
+        total_tick_old[count] = total_tick[count];
+        idle_old[count] = idle[count];
+        
+        if (!read_fields (fp, fields))
+        {
+            fclose (fp);
+            return;
+        }
+        
+        for (i=0, total_tick[count] = 0; i<10; i++)
+        {
+            total_tick[count] += fields[i];
+        }
+        idle[count] = fields[3];
+        
+        del_total_tick[count] = total_tick[count] - total_tick_old[count];
+        del_idle[count] = idle[count] - idle_old[count];
+        percent_usage = ((del_total_tick[count] - del_idle[count]) / (double) del_total_tick[count]) * 100;
+        
+        cpu[count] = (int)percent_usage;
+    }
+    
+    fclose (fp);
+#endif
 }
