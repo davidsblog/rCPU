@@ -250,7 +250,7 @@ int get_cpu_count()
 {
 #ifdef __APPLE__
     // just so that I can test it in xcode on my mac...
-    return 2;
+    return 4;
 #else
     int count=0;
     unsigned long long int fields[10];

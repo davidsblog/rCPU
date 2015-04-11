@@ -26,7 +26,7 @@ function get_cpu_use()
             	cpuDataSets.push(new TimeSeries());            
             	if (n>0)
             	{
-            		$("#cpu0").after("<br/><canvas id=\"cpu" + n +"\" width=\"500\" height=\"100\" />");
+            		$("#cpu0").after("<div style=\"height:2px\">&nbsp;</div><canvas id=\"cpu" + n +"\" width=\"500\" height=\"100\" />");
             	}
    	  		}
     	}
