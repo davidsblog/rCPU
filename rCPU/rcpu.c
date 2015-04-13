@@ -24,7 +24,7 @@ int get_graph_count();
 void get_cpu_use(int *arr, int len);
 
 int max_cpu;
-int *arr;
+int *usages;
 double temp;
 pthread_t polling_thread_id;
 
@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 	}
 	
     max_cpu = get_graph_count();
-    arr = malloc(max_cpu * sizeof(int));
+    usages = malloc(max_cpu * sizeof(int));
 
     if (pthread_create(&polling_thread_id, NULL, polling_thread, NULL) !=0)
     {
@@ -61,7 +61,7 @@ void* polling_thread(void *args)
             temp = get_temp();
             i=0;
         }
-        get_cpu_use(arr, max_cpu);
+        get_cpu_use(usages, max_cpu);
     }
     return NULL;
 }
@@ -74,17 +74,17 @@ void log_filter(log_type type, char *s1, char *s2, int socket_fd)
 // decide if we need to send an API response or a file...
 void send_response(struct hitArgs *args, char *path, char *request_body, http_verb type)
 {
-    int path_length=(int)strlen(path);
-    if (path_ends_with(path, "cpu.api"))
+	int path_length=(int)strlen(path);
+	if (path_ends_with(path, "cpu.api"))
 	{
 		return send_cpu_response(args, path, request_body);
 	}
-    if (path_ends_with(path, "temp.api"))
-    {
-        return send_temp_response(args, path, request_body);
-    }
+	if (path_ends_with(path, "temp.api"))
+	{
+		return send_temp_response(args, path, request_body);
+	}
     
-    send_file_response(args, path, request_body, path_length);
+	send_file_response(args, path, request_body, path_length);
 }
 
 // receives a number, returns the current CPU use
@@ -98,7 +98,7 @@ void send_cpu_response(struct hitArgs *args, char *path, char *request_body)
         string_add(response, "[");
         for (int p=0; p<max_cpu; p++)
         {
-            sprintf(tmp, "%d", arr[p]);
+            sprintf(tmp, "%d", usages[p]);
             string_add(response, tmp);
             if (p < max_cpu-1)
             {
@@ -108,10 +108,10 @@ void send_cpu_response(struct hitArgs *args, char *path, char *request_body)
         string_add(response, "]");
         
         int c = atoi(form_value(args, 0));
-		if (c > max_cpu) c=0;
+        if (c > max_cpu) c=0;
         // TODO: use c if needed
 		
-		ok_200(args, "\nContent-Type: application/json", string_chars(response), path);
+        ok_200(args, "\nContent-Type: application/json", string_chars(response), path);
         string_free(response);
 	}
 	else
