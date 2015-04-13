@@ -20,7 +20,7 @@ void send_temp_response(struct hitArgs *args, char*, char*);
 int path_ends_with(char *path, char *match);
 void send_file_response(struct hitArgs *args, char*, char*, int);
 double get_temp();
-int get_cpu_count();
+int get_graph_count();
 void get_cpu_use(int *arr, int len);
 
 int max_cpu;
@@ -36,7 +36,7 @@ int main(int argc, char **argv)
 		return 0;
 	}
 	
-    max_cpu = get_cpu_count();
+    max_cpu = get_graph_count();
     arr = malloc(max_cpu * sizeof(int));
 
     if (pthread_create(&polling_thread_id, NULL, polling_thread, NULL) !=0)
@@ -245,27 +245,28 @@ int read_fields (FILE *fp, unsigned long long int *fields)
   return 1;
 }
 
-// TODO: make this simpler, just count the number of lines?
-int get_cpu_count()
+// Returns the number of CPUs +1
+int get_graph_count()
 {
 #ifdef __APPLE__
-    // just so that I can test it in xcode on my mac...
+    // just so that I can test it in Xcode on my Mac...
     return 4;
 #else
-    int count=0;
-    unsigned long long int fields[10];
-    FILE *fp = fopen ("/proc/stat", "r");
-    if (fp == NULL)
-    {
-        return -1;
-    }
+	char buffer[BUF_MAX];
+	int count=0;
+	FILE *fp = fopen ("/proc/stat", "r");
+	if (fp == NULL)
+	{
+		return -1;
+	}
     
-    while (read_fields (fp, fields) != -1)
-    {
-        count++;
-    }
-    fclose (fp);
-    return count;
+	while (fgets (buffer, BUF_MAX, fp) != NULL)
+	{
+		if (strncmp(buffer, "cpu", 3) != 0) break;
+		count++;
+	}
+	fclose (fp);
+	return count;
 #endif
 }
 
