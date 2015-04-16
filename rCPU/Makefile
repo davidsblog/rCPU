@@ -32,9 +32,10 @@ wr740n: $(CFILES) $(RESOURCES)
 .PHONY: clean
 
 install: $(TARGET)
-	cp -n rcpu /usr/local/bin
+	cp -n $(TARGET) /usr/local/bin
 	cp -n init_script /etc/init.d/rCPU
 	chmod +x /etc/init.d/rCPU
+	update-rc.d rCPU defaults
 	/etc/init.d/rCPU start
 
 clean:
