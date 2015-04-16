@@ -14,7 +14,7 @@ git clone https://github.com/davidsblog/rCPU
 cd rCPU/rCPU/
 sudo make install
 ```
-...which will build and install it as a service (it will run at system start-up).  **The server will run on port 8111.** You can remove it like this (assuming you are still in the `rCPU/rCPU/` directory):
+...which will build everything and install it as a service (it will run at system start-up).  **The server will run on port 8111.** That means you can view the graphs by visiting http://192.168.1.2:8111/ (you need to substitute your Raspberry Pi's IP address). You can remove it from your system like this (assuming you are still in the `rCPU/rCPU/` directory):
 ```
 sudo make uninstall
 ```
