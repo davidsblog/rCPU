@@ -31,11 +31,11 @@ wr740n: $(CFILES) $(RESOURCES)
 
 .PHONY: clean
 
-install:
-	mkdir -p /etc/rCPU.d
-	cp rcpu /etc/rCPU.d
-	cp init_script /etc/init.d/rCPU
+install: $(TARGET)
+	cp -n rcpu /usr/local/bin
+	cp -n init_script /etc/init.d/rCPU
 	chmod +x /etc/init.d/rCPU
+	/etc/init.d/rCPU start
 
 clean:
 	rm -f *.o $(TARGET) $(RESOURCES)

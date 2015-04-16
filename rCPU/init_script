@@ -1,18 +1,32 @@
-#!/bin/sh /etc/rc.common
-#
-# init script
-# the most basic init script to start
-# the rCPU server to monitor the CPU.
-#
-# it should go in /etc/init.d/
+#!/bin/bash
+# /etc/init.d/rCPU
 
-START=10
-STOP=15
+### BEGIN INIT INFO
+# Provides:          rCPU
+# Required-Start:    $remote_fs $syslog
+# Required-Stop:     $remote_fs $syslog
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Example initscript
+# Description:       The rCPU service is used to monitor the CPUs via HTTP
+### END INIT INFO
 
-start() {
-        /etc/rCPU.d/rcpu 8111 &
-}
 
-stop() {
+case "$1" in 
+    start)
+        echo "Starting rCPU service..."
+        /usr/local/bin/rcpu 8111 &
+        echo "The rCPU Service should be running"
+        ;;
+    stop)
+        echo "Stopping the rCPU service..."
         killall rcpu
-}
+        echo "The rCPU Service should be stopped"
+        ;;
+    *)
+        echo "Usage: /etc/init.d/rCPU start|stop"
+        exit 1
+        ;;
+esac
+
+exit 0
