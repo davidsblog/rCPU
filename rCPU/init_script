@@ -1,0 +1,18 @@
+#!/bin/sh /etc/rc.common
+#
+# init script
+# the most basic init script to start
+# the rCPU server to monitor the CPU.
+#
+# it should go in /etc/init.d/
+
+START=10
+STOP=15
+
+start() {
+        /etc/rCPU.d/rcpu 8111 &
+}
+
+stop() {
+        killall rcpu
+}
