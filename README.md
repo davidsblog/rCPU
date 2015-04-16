@@ -7,6 +7,21 @@ The program will automatically adjust the display according to the number of CPU
 
 ###How to build and run
 
+#####On the Raspberry Pi (and other Debian based systems probaby)
+You should be able to do this:
+```
+git clone https://github.com/davidsblog/rCPU
+cd rCPU/rCPU/
+sudo make install
+```
+...which will build and install it as a service (it will run at system start-up).  **The server will run on port 8111.** You can remove it like this (assuming you are still in the `rCPU/rCPU/` directory):
+```
+sudo make uninstall
+```
+
+**NOTE:** the `sudo` before calling make above is important, since you're installing services.
+
+#####Runing manually (or on different Linux versions)
 Just do this:
 
 ```
