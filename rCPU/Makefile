@@ -38,5 +38,11 @@ install: $(TARGET)
 	update-rc.d rCPU defaults
 	/etc/init.d/rCPU start
 
+uninstall:
+	/etc/init.d/rCPU stop
+	update-rc.d -f rCPU remove
+	rm -f /usr/local/bin/$(TARGET)
+	rm -f /etc/init.d/rCPU
+
 clean:
 	rm -f *.o $(TARGET) $(RESOURCES)
