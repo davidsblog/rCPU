@@ -1,4 +1,8 @@
 rCPU.xcodeproj/
+code.h
+index.h
+jquery-2-1-0-min.h
+smoothie.h
 
 # osx noise
 .DS_Store
