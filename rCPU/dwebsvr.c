@@ -1,6 +1,8 @@
-// set the correct mode here, options are:
-// SINGLE_THREADED, MULTI_PROCESS, OR MULTI_THREADED
-#define MODE MULTI_THREADED
+/****************************************************************************
+** Released under The MIT License (MIT). This code comes without warranty, **
+** but if you use it you must provide attribution back to David's Blog     **
+** at http://www.codehosting.net   See the LICENSE file for more details.  **
+****************************************************************************/
 
 #include <stdio.h>
 #include <ctype.h>
@@ -13,6 +15,11 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <sys/time.h> // for struct timeval
+
+// set the correct mode here, options are:
+// SINGLE_THREADED, MULTI_PROCESS, OR MULTI_THREADED
+#define MODE MULTI_THREADED
+
 #if MODE == MULTI_THREADED
     #include <pthread.h>
 #endif
