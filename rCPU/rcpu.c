@@ -102,7 +102,7 @@ void send_cpu_response(struct hitArgs *args, char *path, char *request_body)
             string_add(response, tmp);
             if (p < max_cpu-1)
             {
-                string_add(response, ", ");
+                string_add(response, ",");
             }
         }
         string_add(response, "]");
@@ -169,7 +169,6 @@ int path_ends_with(char *path, char *match)
 
 void send_file_response(struct hitArgs *args, char *path, char *request_body, int path_length)
 {
-	long len = 0;
     STRING *response = new_string(1024);
     string_add(response, "HTTP/1.1 200 OK\n");
     string_add(response, "Connection: close\n");
