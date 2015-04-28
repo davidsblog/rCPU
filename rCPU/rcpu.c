@@ -181,29 +181,27 @@ void send_file_response(struct hitArgs *args, char *path, char *request_body, in
         write_header(args->socketfd, string_chars(response), index_html_len);
         write(args->socketfd, index_html, index_html_len);
     }
-    if (path_ends_with(path, "code.js"))
+    else if (path_ends_with(path, "code.js"))
     {
         string_add(response, "text/javascript");
         write_header(args->socketfd, string_chars(response), code_js_len);
         write(args->socketfd, code_js, code_js_len);
     }
-    if (path_ends_with(path, "smoothie.js"))
+    else if (path_ends_with(path, "smoothie.js"))
     {
         string_add(response, "text/javascript");
         write_header(args->socketfd, string_chars(response), smoothie_js_len);
         write(args->socketfd, smoothie_js, smoothie_js_len);
     }
-    if (path_ends_with(path, "jquery-2-1-0-min.js"))
+    else if (path_ends_with(path, "jquery-2-1-0-min.js"))
     {
         string_add(response, "text/javascript");
         write_header(args->socketfd, string_chars(response), jquery_2_1_0_min_js_len);
         write(args->socketfd, jquery_2_1_0_min_js, jquery_2_1_0_min_js_len);
     }
-	
-    if (len==0)
+    else
     {
-        string_free(response);
-        return notfound_404(args, "no such file");
+        notfound_404(args, "no such file");
     }
     
     string_free(response);
