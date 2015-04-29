@@ -30,6 +30,14 @@ struct http_header
 
 /* ---------- Memory allocation helper stuff ---------- */
 
+void* malloc_or_quit(size_t num_bytes, const char *src_file, int src_line);
+void* realloc_or_quit(void *ptr, size_t num_bytes, const char *src_file, int src_line);
+void* calloc_or_quit(size_t num, size_t size, const char *src_file, int src_line);
+
+#define mallocx(num_bytes) malloc_or_quit((num_bytes), __FILE__, __LINE__)
+#define reallocx(ptr, num_bytes) realloc_or_quit((ptr), (num_bytes), __FILE__, __LINE__)
+#define callocx(num, size) calloc_or_quit((num), (size), __FILE__, __LINE__)
+
 typedef struct
 {
     void *ptr;		// the pointer to the data

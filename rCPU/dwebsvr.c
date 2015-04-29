@@ -40,12 +40,12 @@ void get_form_values(struct hitArgs *args, char *body)
     int t=0, i, alloc = FORM_VALUE_BLOCK;
 	char *tmp, *token = strtok_r(body, "&", &saveptr);
     
-    args->form_values = malloc(alloc * sizeof(FORM_VALUE));
+    args->form_values = mallocx(alloc * sizeof(FORM_VALUE));
     memset(args->form_values, 0, alloc * sizeof(FORM_VALUE));
     
     while(token != NULL)
     {
-        tmp = malloc((int)strlen(token)+1);
+        tmp = mallocx((int)strlen(token)+1);
         strcpy(tmp, token);
         url_decode(tmp);
         
@@ -57,12 +57,12 @@ void get_form_values(struct hitArgs *args, char *body)
         if (alloc<=t)
         {
             int newsize = alloc+FORM_VALUE_BLOCK;
-            args->form_values = realloc(args->form_values, newsize * sizeof(FORM_VALUE));
+            args->form_values = reallocx(args->form_values, newsize * sizeof(FORM_VALUE));
             memset(args->form_values+alloc, 0, FORM_VALUE_BLOCK * sizeof(FORM_VALUE));
             alloc = newsize;
         }
         
-        args->form_values[t].data = malloc((int)strlen(tmp)+1);
+        args->form_values[t].data = mallocx((int)strlen(tmp)+1);
         strcpy(args->form_values[t].data, tmp);
         args->form_values[t].name = args->form_values[t].data;
         args->form_values[t].value = args->form_values[t].data+1+i;
@@ -266,13 +266,13 @@ void webhit(struct hitArgs *args)
     
     if (headers_end > 0)
     {
-        args->headers = malloc((int)headers_end+1);
+        args->headers = mallocx((int)headers_end+1);
         strncpy(args->headers, string_chars(args->buffer), headers_end);
         args->headers[headers_end]=0;
     }
     else
     {
-        args->headers = malloc(1);
+        args->headers = mallocx(1);
         args->headers[0] = 0;
     }
     
@@ -290,8 +290,13 @@ void webhit(struct hitArgs *args)
         {
             request_size += i;
             string_add(args->buffer, tmp_buf);
+            body_size = request_size - body_start;
         }
-        body_size = request_size - body_start;
+        else
+        {
+            // stop looping if we cannot read any more bytes
+            break;
+        }
     }
     
     if (request_size <= 0)
@@ -325,9 +330,19 @@ void webhit(struct hitArgs *args)
 		}
 	}
 
-	for (j=0; j<i-1; j++)
+    j = (type==HTTP_GET) ? 4 : 5;
+    
+    // check for an absolute directory
+    if (string_chars(args->buffer)[j] == '/' && string_chars(args->buffer)[j+1] == '/')
+    {
+        forbidden_403(args, "Sorry, absolute paths (//) are not permitted");
+        finish_hit(args, 3);
+        return;
+    }
+    
+	for (; j<i-1; j++)
 	{
-		// check for parent directory
+		// check for any parent directory use
 		if (string_chars(args->buffer)[j] == '.' && string_chars(args->buffer)[j+1] == '.')
 		{
 			forbidden_403(args, "Sorry, parent paths (..) are not permitted");
@@ -340,7 +355,7 @@ void webhit(struct hitArgs *args)
     j = (int)strlen(ctype.value);
     if (j > 0)
     {
-        args->content_type = malloc(j+1);
+        args->content_type = mallocx(j+1);
         strncpy(args->content_type, ctype.value, j);
         
         if (string_matches_value(args->content_type, "application/x-www-form-urlencoded"))
@@ -350,7 +365,7 @@ void webhit(struct hitArgs *args)
     }
     else
     {
-        args->content_type = malloc(1);
+        args->content_type = mallocx(1);
         args->content_type[0] = 0;
     }
     
@@ -485,15 +500,7 @@ int dwebserver(int port,
             logger_func(ERROR, "system call", "setsockopt -> SO_RCVTIMEO", 0);
         }
         
-        struct hitArgs *args = malloc(sizeof(struct hitArgs));
-        if (args==NULL)
-        {
-            if (logger_func!=NULL)
-            {
-                logger_func(ERROR, "system call", "malloc", 0);
-            }
-			return 0;
-        }
+        struct hitArgs *args = mallocx(sizeof(struct hitArgs));
         args->buffer = NULL;
         args->form_values = NULL;
         args->headers = NULL;
@@ -588,11 +595,54 @@ int string_matches_value(char *str, const char *value)
 
 /* ---------- Memory allocation helpers ---------- */
 
+void* malloc_or_quit(size_t num_bytes, const char *src_file, int src_line)
+{
+    void *mem;
+    if ((mem = malloc(num_bytes)) == NULL)
+    {
+        fprintf(stderr, "file: '%s' at line: %d failed to malloc %zu bytes", src_file, src_line, num_bytes);
+        exit(EXIT_FAILURE);
+    }
+    else
+    {
+        return mem;
+    }
+}
+
+void* realloc_or_quit(void *ptr, size_t num_bytes, const char *src_file, int src_line)
+{
+    void *mem;
+    if ((mem = realloc(ptr, num_bytes)) == NULL)
+    {
+        fprintf(stderr, "file: '%s' at line: %d failed to realloc %zu bytes", src_file, src_line, num_bytes);
+        exit(EXIT_FAILURE);
+    }
+    else
+    {
+        return mem;
+    }
+}
+
+void* calloc_or_quit(size_t num, size_t size, const char *src_file, int src_line)
+{
+    void *mem;
+    if ((mem = calloc(num, size)) == NULL)
+    {
+        fprintf(stderr, "file: '%s' at line: %d failed to calloc [%zu x %zu] bytes",
+            src_file, src_line, num, size);
+        exit(EXIT_FAILURE);
+    }
+    else
+    {
+        return mem;
+    }
+}
+
 void bcreate(blk *b, int elem_size, int inc)
 {
     b->elem_bytes = elem_size;
     b->chunk_size = inc;
-    b->ptr = calloc(b->chunk_size, b->elem_bytes);
+    b->ptr = callocx(b->chunk_size, b->elem_bytes);
     b->alloc_bytes = b->chunk_size * b->elem_bytes;
     b->used_bytes = 0;
 }
@@ -605,7 +655,7 @@ void badd(blk *b, void *data, int len)
         {
 			b->alloc_bytes+= (b->chunk_size * b->elem_bytes);
         }
-        b->ptr=realloc(b->ptr, b->alloc_bytes);
+        b->ptr=reallocx(b->ptr, b->alloc_bytes);
     }
     memcpy(b->ptr + b->used_bytes, data, len);
     b->used_bytes += len;
@@ -621,7 +671,7 @@ void bfree(blk *b)
 
 STRING* new_string(int increments)
 {
-	STRING *s = malloc(sizeof(STRING));
+	STRING *s = mallocx(sizeof(STRING));
 	bcreate(s, 1, increments);
 	badd(s, "\0", 1);
 	return s;

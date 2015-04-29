@@ -37,7 +37,7 @@ int main(int argc, char **argv)
 	}
 	
     max_cpu = get_graph_count();
-    usages = malloc(max_cpu * sizeof(int));
+    usages = mallocx(max_cpu * sizeof(int));
 
     if (pthread_create(&polling_thread_id, NULL, polling_thread, NULL) !=0)
     {
@@ -48,6 +48,7 @@ int main(int argc, char **argv)
     // don't read from the console or log anything
     dwebserver(atoi(argv[1]), &send_response, &log_filter);
     
+    free(usages);
     return 1; // just to stop compiler complaints
 }
 
