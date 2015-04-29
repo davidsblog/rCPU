@@ -28,7 +28,7 @@ struct http_header
     char value[255];
 };
 
-/* ---------- Memory allocation helper stuff ---------- */
+/* --------- Memory allocation helper stuff --------- */
 
 void* malloc_or_quit(size_t num_bytes, const char *src_file, int src_line);
 void* realloc_or_quit(void *ptr, size_t num_bytes, const char *src_file, int src_line);
@@ -54,7 +54,7 @@ void string_add(STRING *s, char *char_array);
 char* string_chars(STRING *s);
 void string_free(STRING *s);
 
-/* ---------- End of memory allocation helper stuff ---------- */
+/* --------- End of memory allocation helper stuff --------- */
 
 typedef struct
 {

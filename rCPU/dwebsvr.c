@@ -593,7 +593,7 @@ int string_matches_value(char *str, const char *value)
     return strncmp(str, value, strlen(value))==0;
 }
 
-/* ---------- Memory allocation helpers ---------- */
+/* --------- Memory allocation helpers --------- */
 
 void* malloc_or_quit(size_t num_bytes, const char *src_file, int src_line)
 {
@@ -694,4 +694,4 @@ void string_free(STRING *s)
 	free(s);
 }
 
-/* ---------- End of memory allocation helpers ---------- */
+/* --------- End of memory allocation helpers --------- */

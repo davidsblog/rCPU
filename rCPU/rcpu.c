@@ -41,8 +41,8 @@ int main(int argc, char **argv)
 
     if (pthread_create(&polling_thread_id, NULL, polling_thread, NULL) !=0)
     {
-        puts("Error: pthread_create could not create polling thread");
-        return 0;
+        fprintf(stderr, "Error: pthread_create could not create polling thread");
+        exit(EXIT_FAILURE);
     }
     
     // don't read from the console or log anything
