@@ -26,6 +26,10 @@
 
 #include "dwebsvr.h"
 
+// this is the maximum amount of bytes that can be read from a request
+// it includes the headers
+#define MAX_INCOMING_REQUEST 4096
+
 // get_form_values() will allocate memory in blocks of this size
 #define FORM_VALUE_BLOCK 10
 
@@ -245,7 +249,8 @@ void webhit(struct hitArgs *args)
     
     // we need to read the HTTP headers first...
     // so loop until we receive "\r\n\r\n"
-    while (get_body_start(string_chars(args->buffer)) < 0)
+    while (get_body_start(string_chars(args->buffer)) < 0
+           && args->buffer->used_bytes <= MAX_INCOMING_REQUEST)
     {
         memset(tmp_buf, 0, READ_BUF_LEN+1);
         request_size += read(args->socketfd, tmp_buf, READ_BUF_LEN);
@@ -282,7 +287,8 @@ void webhit(struct hitArgs *args)
     }
     
     // safari seems to send the headers, and then the body slightly later
-    while (body_size < args->content_length)
+    while (body_size < args->content_length
+           && args->buffer->used_bytes <= MAX_INCOMING_REQUEST)
     {
         memset(tmp_buf, 0, READ_BUF_LEN+1);
         i = read(args->socketfd, tmp_buf, READ_BUF_LEN);
@@ -333,9 +339,9 @@ void webhit(struct hitArgs *args)
     j = (type==HTTP_GET) ? 4 : 5;
     
     // check for an absolute directory
-    if (string_chars(args->buffer)[j] == '/' && string_chars(args->buffer)[j+1] == '/')
+    if (string_chars(args->buffer)[j+1] == '/')
     {
-        forbidden_403(args, "Sorry, absolute paths (//) are not permitted");
+        forbidden_403(args, "Sorry, absolute paths are not permitted");
         finish_hit(args, 3);
         return;
     }
@@ -593,7 +599,7 @@ int string_matches_value(char *str, const char *value)
     return strncmp(str, value, strlen(value))==0;
 }
 
-/* --------- Memory allocation helpers --------- */
+/* ---------- Memory allocation helpers ---------- */
 
 void* malloc_or_quit(size_t num_bytes, const char *src_file, int src_line)
 {
@@ -694,4 +700,4 @@ void string_free(STRING *s)
 	free(s);
 }
 
-/* --------- End of memory allocation helpers --------- */
+/* ---------- End of memory allocation helpers ---------- */

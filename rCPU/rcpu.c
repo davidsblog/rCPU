@@ -129,7 +129,7 @@ void send_temp_response(struct hitArgs *args, char *path, char *request_body)
     
     if (temp >= 0)
     {
-        sprintf(tmp, "%6.3f C", temp);
+        sprintf(tmp, "%6.2f°C", temp);
     }
     else
     {
