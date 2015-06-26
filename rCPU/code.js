@@ -1,11 +1,29 @@
 var cpuDataSets = [];
+var tempTimeLine = new TimeSeries();
 
 $(function() {
 	$("#status").text("");
 	get_temp();
 	get_cpu_use();
 	setInterval("get_cpu_use()", 1000);
-	setInterval("get_temp()", 5000);
+	setInterval("get_temp()", 1000);
+	var timeline = new SmoothieChart(
+  	{
+		millisPerPixel: 80,
+     		grid:
+     		{
+        		strokeStyle: '#555555',
+        		verticalSections: 4 
+     		}
+  	});
+  	timeline.addTimeSeries(tempTimeLine,{ 
+      		strokeStyle: 'rgba(0, 255, 0, 1)',
+      		fillStyle: 'rgba(0, 255, 0, 0.2)',
+      		lineWidth: 3
+    	});
+  	timeline.streamTo(document.getElementById('tempChart'), 1000);
+	document.getElementById('tempChart').width  = window.innerWidth;
+	document.getElementById('cpu0').width  = window.innerWidth;
 });
 
 function get_cpu_use()
@@ -21,20 +39,18 @@ function get_cpu_use()
     	if (cpuDataSets.length==0)
     	{
         	needs_init = 1;
-        	for (var n=cpu_info.length-1; n>=0; n--)
-        	{
-            	cpuDataSets.push(new TimeSeries());            
-            	if (n>0)
-            	{
-            		$("#cpu0").after("<div style=\"height:2px\">&nbsp;</div><canvas id=\"cpu" + n +"\" width=\"500\" height=\"100\" />");
-            	}
-   	  		}
+        	for (var n=cpu_info.length-1; n>=0; n--){
+	            	cpuDataSets.push(new TimeSeries());            
+            		if (n>0) {
+            			$("#cpu0").after("<div style=\"height:2px\">&nbsp;</div><canvas id=\"cpu" + n +"\" height=\"100\" />");
+				document.getElementById('cpu'+n).width  = window.innerWidth;
+            		}
+   	  	}
     	}
     	for (var n=0; n<cpu_info.length; n++)
     	{
     		cpuDataSets[n].append(new Date().getTime(), cpu_info[n]);
-        	if (needs_init == 1)
-        	{
+        	if (needs_init == 1) {
         		initChart(n);
         	}
       	}
@@ -44,12 +60,12 @@ function get_cpu_use()
 function get_temp()
 {
 	$.ajax({
-        url: "temp.api",
-        type: "post",
-    }).done(function(data)
-    {
-        $("#temp").text(data);
-    });
+        	url: "temp.api",
+        	type: "post",
+    	}).done(function(data){
+	        $("#temp").text(data + "\u00B0C");
+		tempTimeLine.append(new Date().getTime(), data);
+	});
 }
 
 function initChart(cpuId)
@@ -68,8 +84,8 @@ function initChart(cpuId)
   {
     seriesOptions =
     { 
-     strokeStyle: 'rgba(0, 255, 0, 1)',
-     fillStyle: 'rgba(0, 255, 0, 0.2)',
+     strokeStyle: 'rgba(0, 0, 255, 1)',
+     fillStyle: 'rgba(0, 0, 255, 0.2)',
      lineWidth: 2
     };
   }
@@ -78,7 +94,7 @@ function initChart(cpuId)
      labels: {disabled: true},
      maxValue: 103,
      minValue: -3,
-     millisPerPixel: 20,
+     millisPerPixel: 80,
      grid:
      {
         strokeStyle: '#555555',
