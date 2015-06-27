@@ -1,8 +1,11 @@
 var cpuDataSets = [];
 var tempTimeLine = new TimeSeries();
+var windowGap = 40;
 
 $(function() {
 	$("#status").text("");
+    document.getElementById('tempChart').width  = window.innerWidth-windowGap;
+    document.getElementById('cpu0').width  = window.innerWidth-windowGap;
 	get_temp();
 	get_cpu_use();
 	setInterval("get_cpu_use()", 1000);
@@ -16,14 +19,13 @@ $(function() {
         		verticalSections: 4 
      		}
   	});
-  	timeline.addTimeSeries(tempTimeLine,{ 
-      		strokeStyle: 'rgba(0, 255, 0, 1)',
-      		fillStyle: 'rgba(0, 255, 0, 0.2)',
-      		lineWidth: 3
-    	});
+  	timeline.addTimeSeries(tempTimeLine,
+    {
+        strokeStyle: 'rgba(0, 255, 0, 1)',
+        fillStyle: 'rgba(0, 255, 0, 0.2)',
+        lineWidth: 3
+    });
   	timeline.streamTo(document.getElementById('tempChart'), 1000);
-	document.getElementById('tempChart').width  = window.innerWidth;
-	document.getElementById('cpu0').width  = window.innerWidth;
 });
 
 function get_cpu_use()
@@ -39,21 +41,35 @@ function get_cpu_use()
     	if (cpuDataSets.length==0)
     	{
         	needs_init = 1;
-        	for (var n=cpu_info.length-1; n>=0; n--){
-	            	cpuDataSets.push(new TimeSeries());            
-            		if (n>0) {
-            			$("#cpu0").after("<div style=\"height:2px\">&nbsp;</div><canvas id=\"cpu" + n +"\" height=\"100\" />");
-				document.getElementById('cpu'+n).width  = window.innerWidth;
-            		}
-   	  	}
+        	for (var n=cpu_info.length-1; n>=0; n--)
+            {
+                cpuDataSets.push(new TimeSeries());
+                if (n>0)
+                {
+                    $("#cpu0").after("<div style=\"height:2px\">&nbsp;</div><canvas id=\"cpu" + n +"\" height=\"100\" />");
+                    document.getElementById('cpu'+n).width  = window.innerWidth-windowGap;
+                }
+            }
     	}
     	for (var n=0; n<cpu_info.length; n++)
     	{
     		cpuDataSets[n].append(new Date().getTime(), cpu_info[n]);
-        	if (needs_init == 1) {
+        	if (needs_init == 1)
+            {
         		initChart(n);
         	}
       	}
+        if (needs_init == 1)
+        {
+            $(window).resize(function()
+            {
+                document.getElementById('tempChart').width  = window.innerWidth-windowGap;
+                for (var n=0; n<cpu_info.length; n++)
+                {
+                    document.getElementById('cpu'+n).width  = window.innerWidth-windowGap;
+                }
+            });
+        }
 	});
 }
 
