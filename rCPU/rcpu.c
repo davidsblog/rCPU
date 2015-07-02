@@ -133,7 +133,7 @@ void send_temp_response(struct hitArgs *args, char *path, char *request_body)
     }
     else
     {
-        sprintf(tmp, "unknown");
+        sprintf(tmp, "?");
     }
     
     string_add(response, tmp);
@@ -145,6 +145,7 @@ double get_temp()
 {
 #ifdef __APPLE__
     return rand() % 100;
+    //return -1;
 #else
     FILE *temperature = fopen ("/sys/class/thermal/thermal_zone0/temp", "r");
     if (temperature != NULL)

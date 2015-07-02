@@ -9,7 +9,7 @@ $(function() {
 	get_temp();
 	get_cpu_use();
 	setInterval("get_cpu_use()", 1000);
-	setInterval("get_temp()", 1000);
+	setInterval("get_temp()", 5000);
 	var timeline = new SmoothieChart(
   	{
 		millisPerPixel: 80,
@@ -78,9 +78,20 @@ function get_temp()
 	$.ajax({
         	url: "temp.api",
         	type: "post",
-    	}).done(function(data){
-	        $("#temp").text(data + "\u00B0C");
-		tempTimeLine.append(new Date().getTime(), data);
+    }).done(function(data)
+    {
+            if (data!=="?")
+            {
+                $("#temp").text(data + "\u00B0C");
+                tempTimeLine.append(new Date().getTime(), data);
+            }
+            else
+            {
+                $("#temp").text("");
+                $("#tempChart").hide();
+                $("#tempLabel").hide();
+                clearInterval(tempInterval);
+            }
 	});
 }
 
