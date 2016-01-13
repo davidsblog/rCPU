@@ -82,7 +82,7 @@ int dwebserver(int port,
 
 void dwebserver_kill(void);
 
-struct http_header get_header(const char *name, char *request);
+struct http_header get_header(const char *name, char *request, int max_len);
 
 void write_header(int socket_fd, char *head, long content_len);
 void write_html(int socket_fd, char *head, char *html);
