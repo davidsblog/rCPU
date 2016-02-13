@@ -26,7 +26,7 @@ vocore: $(CFILES) $(RESOURCES)
 
 wr740n: $(CFILES) $(RESOURCES)
 	export STAGING_DIR=$$PWD; \
-    `find /home -name mips-openwrt-linux-uclibc-gcc -print -quit -print 2>/dev/null` -o $(TARGET) \
+    `find /home -maxdepth 6 -name mips-openwrt-linux-uclibc-gcc -print -quit -print 2>/dev/null` -o $(TARGET) \
     -Os -s $(CFILES) $(CFLAGS)
 
 .PHONY: clean
