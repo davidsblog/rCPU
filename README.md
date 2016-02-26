@@ -3,6 +3,10 @@ A minimal webserver for remote CPU monitoring (on Linux).  Everything is embedde
 
 The program will automatically adjust the display according to the number of CPU cores.
 
+**UPDATE:** this latest version (February 2016) changes the graph plotting library from 
+[Smoothie Charts](https://github.com/joewalnes/smoothie/) to [Flot]
+(http://www.flotcharts.org/) in the hope of having better browser support.
+
 **NOTE:** the code to display the core temperature is designed for the Raspberry Pi, it might not work on other machines.
 
 ###How to build and run
@@ -40,6 +44,6 @@ The html and javascript files are embedded in the executable.  Each resource fil
 
 I am using the following javascript libraries:
 - https://jquery.com/ jQuery (v2.1.0)
-- https://github.com/joewalnes/smoothie/ Smoothie Charts 
+- http://www.flotcharts.org/ Flot (v0.8.3) 
 
 Thanks to all involved with those projects.

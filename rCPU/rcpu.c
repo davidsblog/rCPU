@@ -10,7 +10,7 @@
 #include "code.h"
 #include "index.h"
 #include "jquery-2-1-0-min.h"
-#include "smoothie.h"
+#include "flot.h"
 
 void* polling_thread(void *args);
 void send_response(struct hitArgs *args, char*, char*, http_verb);
@@ -144,7 +144,7 @@ void send_temp_response(struct hitArgs *args, char *path, char *request_body)
 double get_temp()
 {
 #ifdef __APPLE__
-    return rand() % 100;
+    return 25 + rand() % 100;
     //return -1;
 #else
     FILE *temperature = fopen ("/sys/class/thermal/thermal_zone0/temp", "r");
@@ -188,17 +188,17 @@ void send_file_response(struct hitArgs *args, char *path, char *request_body, in
         write_header(args->socketfd, string_chars(response), code_js_len);
         write(args->socketfd, code_js, code_js_len);
     }
-    else if (path_ends_with(path, "smoothie.js"))
-    {
-        string_add(response, "text/javascript");
-        write_header(args->socketfd, string_chars(response), smoothie_js_len);
-        write(args->socketfd, smoothie_js, smoothie_js_len);
-    }
     else if (path_ends_with(path, "jquery-2-1-0-min.js"))
     {
         string_add(response, "text/javascript");
         write_header(args->socketfd, string_chars(response), jquery_2_1_0_min_js_len);
         write(args->socketfd, jquery_2_1_0_min_js, jquery_2_1_0_min_js_len);
+    }
+    else if (path_ends_with(path, "flot.js"))
+    {
+        string_add(response, "text/javascript");
+        write_header(args->socketfd, string_chars(response), flot_js_len);
+        write(args->socketfd, flot_js, flot_js_len);
     }
     else
     {

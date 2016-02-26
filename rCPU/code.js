@@ -1,135 +1,212 @@
-var cpuDataSets = [];
-var tempTimeLine = new TimeSeries();
-var windowGap = 40;
-
 $(function() {
-	$("#status").text("");
-    document.getElementById('tempChart').width  = window.innerWidth-windowGap;
-    document.getElementById('cpu0').width  = window.innerWidth-windowGap;
-	get_temp();
-	get_cpu_use();
-	setInterval("get_cpu_use()", 1000);
-	setInterval("get_temp()", 5000);
-	var timeline = new SmoothieChart(
-  	{
-		millisPerPixel: 80,
-     		grid:
-     		{
-        		strokeStyle: '#555555',
-        		verticalSections: 4 
-     		}
-  	});
-  	timeline.addTimeSeries(tempTimeLine,
-    {
-        strokeStyle: 'rgba(0, 255, 0, 1)',
-        fillStyle: 'rgba(0, 255, 0, 0.2)',
-        lineWidth: 3
-    });
-  	timeline.streamTo(document.getElementById('tempChart'), 1000);
-});
-
-function get_cpu_use()
-{
-   $.ajax({
-		url: "cpu.api",
-		type: "post",
-		data: { counter:"0" }
-	}).done(function(cpu_info)
-	{
-    	$("#cpuinfo").text(cpu_info[0]+"% ("+(cpu_info.length-1)+" CPU)");       
-     	var needs_init = 0;
-    	if (cpuDataSets.length==0)
-    	{
-        	needs_init = 1;
-        	for (var n=cpu_info.length-1; n>=0; n--)
-            {
-                cpuDataSets.push(new TimeSeries());
-                if (n>0)
-                {
-                    $("#cpu0").after("<div style=\"height:2px\">&nbsp;</div><canvas id=\"cpu" + n +"\" height=\"100\" />");
-                    document.getElementById('cpu'+n).width  = window.innerWidth-windowGap;
-                }
+  $("#status").text("");
+  
+  var totalPoints = 500, updateInterval = 200, windowGap = 40;
+  var procdata = [], procplot = [];
+  var tempdata = [], tempplot = [];
+  var cpu_info_cache = [], temp_data_cache = 0;
+  var pi = 0, ti = 0;
+  
+  function dataToRes(data) {
+    var res = [];
+    for (i=0; i<data.length; i++) {
+        res[i] = [ i, data[i] ];
+    }
+    return res;
+  }
+  
+  function setProcPlots() {
+    for (var n=0; n< procplot.length; n++) {
+        procplot[n] = $.plot("#cpu"+n, [ dataToRes(procdata[n]) ], {
+            series: {
+                shadowSize: 0,
+                color: 'rgba(0,0,0,0)'
+            },
+            lines: {
+                fill: true,
+                fillColor:
+                    n==0 ? { colors: [ 'rgba(255,64,64,0.6)', 'rgba(255,0,0,0.8)' ] }
+                         : { colors: [ 'rgba(64,255,64,0.6)', 'rgba(0,255,0,0.8)' ] }
+            },
+            grid: {
+                color: "#008000",
+                backgroundColor: "#000000"
+            },
+            yaxis: {
+                min: -1,
+                max: 101,
+                color: "#808080",
+                tickSize: [25]
+            },
+            xaxis: {
+                show: false
             }
-    	}
-    	for (var n=0; n<cpu_info.length; n++)
-    	{
-    		cpuDataSets[n].append(new Date().getTime(), cpu_info[n]);
-        	if (needs_init == 1)
-            {
-        		initChart(n);
-        	}
-      	}
-        if (needs_init == 1)
-        {
-            $(window).resize(function()
-            {
-                document.getElementById('tempChart').width  = window.innerWidth-windowGap;
-                for (var n=0; n<cpu_info.length; n++)
-                {
-                    document.getElementById('cpu'+n).width  = window.innerWidth-windowGap;
-                }
-            });
+        });
+        var overlay = function(index) {
+            return function(plot, cvs) {
+                if (!plot) { return; }
+                var cvsWidth = plot.width() / 2;
+                var text = index == 0 ? 'Total CPU' : 'CPU'+index;
+                cvs.font = "bold 40px Arial";
+                cvs.fillStyle = 'rgba(128,128,128,0.5)';
+                cvs.textAlign = 'center';
+                cvs.fillText(text, cvsWidth, 65);
+                return cvs;
+            }
+        };
+        procplot[n].hooks.drawOverlay.push(overlay(n));
+    }
+  }
+  
+  function initProcCharts() {
+    $.ajax({
+        url: "cpu.api",
+        type: "post",
+        data: { counter:"0" }
+    }).done(function(cpu_info) {
+        if (cpu_info.length==2) { cpu_info_cache = [ cpu_info[0] ]; }
+        else { cpu_info_cache = cpu_info; }
+
+        for (var n=cpu_info.length-1; n>=0; n--) {
+            if (n>0) {
+                $("#cpu0").after("<div style=\"height:2px\">&nbsp;</div><div id=\"cpu" + n +"\" style=\"height:100px\" />");
+            }
+            
+            procdata[n] = new Array(totalPoints);
+            for (var i = 0; i < totalPoints-1; i++) {
+                procdata[n][i] = 0;
+            }
+            procdata[n][totalPoints-1] = cpu_info[n];
         }
-	});
-}
-
-function get_temp()
-{
-	$.ajax({
-        	url: "temp.api",
-        	type: "post",
-    }).done(function(data)
-    {
-            if (data!=="?")
-            {
-                $("#temp").text(data + "\u00B0C");
-                tempTimeLine.append(new Date().getTime(), data);
-            }
-            else
-            {
-                $("#temp").text("");
-                $("#tempChart").hide();
-                $("#tempLabel").hide();
-                clearInterval(tempInterval);
-            }
-	});
-}
-
-function initChart(cpuId)
-{
-  var seriesOptions;
-  if (cpuId==0)
-  {
-    seriesOptions =
-    { 
-      strokeStyle: 'rgba(255, 0, 0, 1)',
-      fillStyle: 'rgba(255, 0, 0, 0.2)',
-      lineWidth: 3
-    };
+        procplot = new Array(cpu_info.length);
+        setProcPlots();
+    });
   }
-  else
-  {
-    seriesOptions =
-    { 
-     strokeStyle: 'rgba(0, 0, 255, 1)',
-     fillStyle: 'rgba(0, 0, 255, 0.2)',
-     lineWidth: 2
-    };
+  
+  function updateProcGraphs(cpu_info) {
+    $("#cpuinfo").text(cpu_info[0]+"% ("+(cpu_info.length-1)+" CPU)");
+    for (var n=cpu_info.length-1; n>=0; n--) {
+        procdata[n] = procdata[n].slice(1);
+        procdata[n].push(cpu_info[n]);
+        procplot[n].setData([dataToRes(procdata[n])]);
+        procplot[n].draw();
+    }
   }
-  var timeline = new SmoothieChart(
-  {
-     labels: {disabled: true},
-     maxValue: 103,
-     minValue: -3,
-     millisPerPixel: 80,
-     grid:
-     {
-        strokeStyle: '#555555',
-        lineWidth: 1,
-        millisPerLine: 1000,
-        verticalSections: 4 
-     }
+  
+  function updateProc() {
+    if (pi++ % 4 == 0) {
+        $.ajax({
+            url: "cpu.api",
+            type: "post",
+            data: { counter:"0" }
+        }).done(function(cpu_info) {
+            if (cpu_info.length==2) { cpu_info_cache = [ cpu_info[0] ]; }
+            else { cpu_info_cache = cpu_info; }
+            updateProcGraphs(cpu_info_cache);
+        });
+    }
+    else {
+        updateProcGraphs(cpu_info_cache);
+    }
+  }
+  
+  function setTempPlot() {
+    tempplot = $.plot("#tempChart", [ dataToRes(tempdata) ], {
+        series: {
+            shadowSize: 0,
+            color: 'rgba(0,0,0,0)'
+        },
+        lines: {
+            fill: true,
+            fillColor: { colors: [ 'rgba(160,160,255,0.8)', 'rgba(255,0,0,0.8)' ] }
+        },
+        grid: {
+            color: "#6B8E23",
+            backgroundColor: "#000000"
+        },
+        yaxis: {
+            min: 20,
+            max: 90,
+            color: "#808080",
+            tickSize: [10]
+        },
+        xaxis: {
+            show: false
+        }
+    });
+    tempplot.hooks.drawOverlay.push(function(plot, cvs) {
+        if (!plot) { return; }
+        var cvsWidth = plot.width() / 2;
+        var text = 'Temperature';
+        cvs.font = "bold 40px Arial";
+        cvs.fillStyle = 'rgba(128,128,128,0.5)';
+        cvs.textAlign = 'center';
+        cvs.fillText(text, cvsWidth, 65);
+        return cvs;
+    });
+  }
+  
+  function initTempChart() {
+    $.ajax({
+        url: "temp.api",
+        type: "post",
+    }).done(function(data) {
+        if (data!=="?")
+        {
+            temp_data_cache = data;
+            $("#temp").text(temp_data_cache + "\u00B0C");
+            tempdata = new Array(totalPoints);
+            for (var i = 0; i < totalPoints-1; i++) {
+                tempdata[i] = 0;
+            }
+            tempdata[totalPoints-1] = temp_data_cache;
+            setTempPlot();
+        }
+        else
+        {
+            $("#temp").text("");
+            $("#tempChart").hide();
+            $("#tempLabel").hide();
+        }
+    });
+  }
+  
+  function updateTempGraph(data) {
+    $("#temp").text(temp_data_cache + "\u00B0C");
+    tempdata = tempdata.slice(1);
+    tempdata.push(temp_data_cache);
+    tempplot.setData([dataToRes(tempdata)]);
+    tempplot.draw();
+  }
+  
+  function updateTemp() {
+    if (ti++ % 4 == 0) {
+        $.ajax({
+            url: "temp.api",
+            type: "post",
+        }).done(function(data) {
+            if (data!=="?") {
+                temp_data_cache = data;
+                updateTempGraph(temp_data_cache);
+            }
+        });
+    }
+    else {
+        updateTempGraph(temp_data_cache);
+    }
+  }
+  
+  $(window).bind("resize", function() {
+    setProcPlots();
+    setTempPlot();
   });
-  timeline.addTimeSeries(cpuDataSets[cpuId], seriesOptions);
-  timeline.streamTo(document.getElementById('cpu'+cpuId), 1000);
-}
+  
+  function showUpdates() {
+    updateTemp();
+    updateProc();
+  }
+  
+  initTempChart();
+  initProcCharts();
+  setInterval(showUpdates, updateInterval);
+});
