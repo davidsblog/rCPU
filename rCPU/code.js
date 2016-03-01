@@ -68,7 +68,7 @@ $(function() {
             if (cpu_info.length==2) { cpu_info_cache = [ cpu_info[0] ]; }
             else { cpu_info_cache = cpu_info; }
 
-            for (var n=cpu_info.length-1; n>=0; n--) {
+            for (var n=cpu_info_cache.length-1; n>=0; n--) {
                 if (n>0) {
                     $("#cpu0").after("<div style=\"height:2px\">&nbsp;</div><div id=\"cpu" + n +"\" style=\"height:100px\" />");
                 }
