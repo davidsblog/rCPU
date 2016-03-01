@@ -84,18 +84,18 @@ $(function() {
         });
     }
   
-    function updateProcGraphs(cpu_info) {
-        $("#cpuinfo").text(cpu_info[0]+"% ("+(cpu_info.length-1)+" CPU)");
-        for (var n=cpu_info.length-1; n>=0; n--) {
+    function updateProcGraphs(cpuData) {
+        $("#cpuinfo").text(cpuData[0]+"% ("+(cpuData.length-1)+" CPU)");
+        for (var n=cpuData.length-1; n>=0; n--) {
             procdata[n] = procdata[n].slice(1);
-            procdata[n].push(cpu_info[n]);
+            procdata[n].push(cpuData[n]);
             procplot[n].setData([dataToRes(procdata[n])]);
             procplot[n].draw();
         }
     }
   
     function updateProc() {
-        if (pi++ % 4 == 0) {
+        if (pi++ % 5 == 0) {
             $.ajax({
                 url: "cpu.api",
                 type: "post",
@@ -203,8 +203,8 @@ $(function() {
     });
   
     function showUpdates() {
-        updateTemp();
         updateProc();
+        updateTemp();
     }
   
     initTempChart();
