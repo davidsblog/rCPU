@@ -9,9 +9,9 @@ The program will automatically adjust the display according to the number of CPU
 
 **NOTE:** the code to display the core temperature is designed for the Raspberry Pi, it might not work on other machines.
 
-###How to build and run
+### How to build and run
 
-#####On the Raspberry Pi (and other Debian based systems probaby)
+##### On the Raspberry Pi (and other Debian based systems probaby)
 You should be able to do this:
 ```
 git clone https://github.com/davidsblog/rCPU
@@ -25,7 +25,7 @@ sudo make uninstall
 
 **NOTE:** the `sudo` before calling make above is important, since you're installing services.
 
-#####Runing manually (or on different Linux versions)
+##### Runing manually (or on different Linux versions)
 Just do this:
 
 ```
@@ -37,10 +37,10 @@ sudo ./rcpu 80
 
 You might have a webserver already running on port 80, in which case you can specify a different port by passing a different parameter than **80** in the last line above.
 
-###Embedded content
+### Embedded content
 The html and javascript files are embedded in the executable.  Each resource file becomes a C header file.  The makefile updates the header files as dependencies during the build process.
 
-###Thanks
+### Thanks
 
 I am using the following javascript libraries:
 - https://jquery.com/ jQuery (v2.1.0)
